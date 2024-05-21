@@ -68,6 +68,7 @@ char      *alloc_strf(const char *fmt, ...);
 Compositor str2compositor(const char *str);
 
 void usage(Config *config);
+int  parse_args(int argc, char *argv[], Config *config);
 bool capture(Config *config);
 
 int main(int argc, char *argv[]) {
@@ -82,45 +83,12 @@ int main(int argc, char *argv[]) {
     config.compositor_supported = config.compositor != COMP_NONE;
     config.screenshot_dir       = NULL;
 
-    switch (argc) {
-        case 4 : {
-            if (strcmp(argv[2], "-d") == 0) {
-                config.screenshot_dir = argv[3];
-            } else {
-                usage(&config);
-                return_defer(EXIT_FAILURE);
-            }
-        } break;
-        case 3 : {
-            if (strcmp(argv[2], "--verbose") == 0) {
-                config.verbose = true;
-            } else {
-                usage(&config);
-                return_defer(EXIT_FAILURE);
-            }
-        } break;
-        case 2 : {
-            if (strcmp(argv[1], "full") == 0) {
-                config.mode = MODE_FULL;
-            } else if (strcmp(argv[1], "region") == 0) {
-                config.mode = MODE_REGION;
-            } else if (strcmp(argv[1], "last-region") == 0) {
-                config.mode = MODE_LAST_REGION;
-            } else if (strcmp(argv[1], "active-window") == 0) {
-                config.mode = MODE_ACTIVE_WINDOW;
-            } else if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
-                usage(&config);
-            } else if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
-                printf(PROG_NAME " " PROG_VERSION "\n");
-            } else {
-                usage(&config);
-                return_defer(EXIT_FAILURE);
-            }
-        } break;
-        default : {
-            usage(&config);
-            return_defer(EXIT_FAILURE);
-        }
+    int parse_result = parse_args(argc, argv, &config);
+    switch (parse_result) {
+        case 2 :  break;
+        case 1 :  return_defer(EXIT_SUCCESS);
+        case 0 :  return_defer(EXIT_FAILURE);
+        default : assert(0 && "unreachable");
     }
 
     const char *home_dir = getenv("HOME");
@@ -198,6 +166,58 @@ defer:
     return result;
 }
 
+bool parse_mode_args(const char *argv, Config *config) {
+    if (strcmp(argv, "full") == 0) {
+        config->mode = MODE_FULL;
+    } else if (strcmp(argv, "region") == 0) {
+        config->mode = MODE_REGION;
+    } else if (strcmp(argv, "last-region") == 0) {
+        config->mode = MODE_LAST_REGION;
+    } else if (strcmp(argv, "active-window") == 0) {
+        config->mode = MODE_ACTIVE_WINDOW;
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+// 0 - arguments passed incorrectly
+// 1 - arguments passed correctly and immediately end the program
+// 2 - arguments passed correctly and proceed
+int parse_args(int argc, char *argv[], Config *config) {
+    if (argc < 2) {
+        usage(config);
+        return 0;
+    }
+
+    size_t i = 1;
+    for (; i < (size_t)argc; i++) {
+        if (i == 1) {
+            if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+                usage(config);
+                return 1;
+            } else if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
+                printf(PROG_NAME " " PROG_VERSION "\n");
+                return 1;
+            }
+            if (!parse_mode_args(argv[i], config)) break;
+        } else if (strcmp(argv[i], "--verbose") == 0) {
+            config->verbose = true;
+        } else if (strcmp(argv[i], "-d") == 0) {
+            if (i + 1 >= (size_t)argc) break;
+            config->screenshot_dir = argv[++i];
+        }
+    }
+
+    if (i == (size_t)argc) {
+        return 2;
+    } else {
+        usage(config);
+        return 0;
+    }
+}
+
 char *alloc_strf(const char *fmt, ...) {
     char   *result = NULL;
     va_list args;
@@ -261,6 +281,50 @@ void usage(Config *config) {
     printf("    --verbose           Print extra output\n");
     printf("\n");
     print_comp_support(config->compositor_supported);
+}
+
+ssize_t run_cmd(char *buf, size_t nbytes, const char *cmd) {
+    int     pipe_fd[2] = { 0 };
+    ssize_t bytes_read = -1;
+
+    if (pipe(pipe_fd) == -1) {
+        eprintf("Could not create pipes: %s\n", strerror(errno));
+        return -1;
+    }
+
+    pid_t pid = fork();
+    if (pid == -1) {
+        eprintf("Could not fork child process: %s\n", strerror(errno));
+        close(pipe_fd[0]);
+        close(pipe_fd[1]);
+        return -1;
+    } else if (pid == 0) {
+        close(pipe_fd[0]);
+        dup2(pipe_fd[1], STDOUT_FILENO);
+        dup2(pipe_fd[1], STDERR_FILENO);
+        close(pipe_fd[1]);
+        execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
+        eprintf("Could not run `%s`: %s\n", cmd, strerror(errno));
+        exit(EXIT_FAILURE);
+    } else {
+        close(pipe_fd[1]);
+
+        int status;
+        if (waitpid(pid, &status, 0) == -1) {
+            eprintf("`%s` could not terminate: %s\n", cmd, strerror(errno));
+            return -1;
+        }
+
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+            return -1;
+        }
+
+        bytes_read      = read(pipe_fd[0], buf, nbytes - 1);
+        buf[bytes_read] = '\0';
+        close(pipe_fd[0]);
+    }
+
+    return bytes_read;
 }
 
 char *get_fname(const char *dir) {
@@ -333,14 +397,27 @@ bool capture_full(Config *config) {
 }
 
 bool capture_region(Config *config) {
-    if (config->verbose) printf("*Capturing region*\n");
-
-    if (system("slurp") != 0) {
-        eprintf("Selection cancelled\n");
-        return false;
+    bool         result      = true;
+    const size_t region_size = 1024;
+    char        *region      = malloc(region_size);
+    if (region == NULL) {
+        eprintf("Could not allocate output for running slurp\n");
     }
 
-    return true;
+    if (config->verbose) printf("*Capturing region*\n");
+
+    ssize_t bytes = run_cmd(region, region_size, "slurp");
+    if (bytes == -1) {
+        eprintf("Selection cancelled\n");
+        return_defer(false);
+    }
+    region[bytes - 1] = '\0';    // trim the final endline
+
+    if (!grim(config, MODE_REGION, region)) return_defer(false);
+
+defer:
+    free(region);
+    return result;
 }
 
 bool capture_last_region(Config *config) {
