@@ -1,6 +1,8 @@
 #include "utils.h"
+#include "prog.h"
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,8 +91,8 @@ bool grim(Config *config, Mode mode, const char *region) {
     };
 
     if (config->verbose) printf("$ %s\n", cmd);
-    if (system(cmd) != 0) {
-        eprintf("Could not run grim\n");
+    if (run_cmd(cmd, NULL, 0) == -1) {
+        eprintf("grim exited\n");
         return_defer(false);
     }
 
@@ -100,7 +102,7 @@ bool grim(Config *config, Mode mode, const char *region) {
     free(cmd);
     cmd = alloc_strf("wl-paste > %s", fname);
     if (config->verbose) printf("$ %s\n", cmd);
-    if (system(cmd) != 0) {
+    if (run_cmd(cmd, NULL, 0) == -1) {
         eprintf("Could save image to %s\n", config->screenshot_dir);
         return_defer(false);
     }
@@ -111,54 +113,74 @@ defer:
     return result;
 }
 
-ssize_t run_cmd(char *buf, size_t nbytes, const char *cmd) {
+ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes) {
+    ssize_t result = -1;
+
     int     pipe_fd[2];
+    int     read_pipe  = -1;
+    int     write_pipe = -1;
+    int     dev_null   = open("/dev/null", O_WRONLY | O_CREAT, 0666);
     ssize_t bytes_read = -1;
 
-    if (pipe(pipe_fd) == -1) {
-        eprintf("Could not create pipes: %s\n", strerror(errno));
-        return -1;
+    if (buf != NULL) {
+        if (pipe(pipe_fd) == -1) {
+            eprintf("Could not create pipes: %s\n", strerror(errno));
+            return_defer(-1);
+        }
+        read_pipe  = pipe_fd[0];
+        write_pipe = pipe_fd[1];
     }
 
     pid_t pid = fork();
     if (pid == -1) {
         eprintf("Could not fork child process: %s\n", strerror(errno));
-        close(pipe_fd[0]);
-        close(pipe_fd[1]);
-        return -1;
+        return_defer(-1);
     } else if (pid == 0) {
-        close(pipe_fd[0]);
-        dup2(pipe_fd[1], STDOUT_FILENO);
-        dup2(pipe_fd[1], STDERR_FILENO);
-        close(pipe_fd[1]);
+        if (buf != NULL) {
+            close(read_pipe);
+            // NOTE: both stdout and stderr are redirected to the same pipe
+            dup2(write_pipe, STDOUT_FILENO);
+            dup2(dev_null, STDERR_FILENO);
+            close(write_pipe);
+        } else {
+            dup2(dev_null, STDOUT_FILENO);
+            dup2(dev_null, STDERR_FILENO);
+        }
+        close(dev_null);
         execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
         eprintf("Could not run `%s`: %s\n", cmd, strerror(errno));
         exit(EXIT_FAILURE);
     } else {
-        close(pipe_fd[1]);
-
         int status;
         if (waitpid(pid, &status, 0) == -1) {
             eprintf("`%s` could not terminate: %s\n", cmd, strerror(errno));
-            return -1;
+            return_defer(-1);
         }
 
-        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-            return -1;
-        }
+        // NOTE: we don't give an f about what's in stderr
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) return_defer(-1);
 
-        bytes_read      = read(pipe_fd[0], buf, nbytes - 1);
-        buf[bytes_read] = '\0';
-        close(pipe_fd[0]);
+        if (buf != NULL) {
+            bytes_read      = read(read_pipe, buf, nbytes - 1);
+            buf[bytes_read] = '\0';
+            return_defer(bytes_read);
+        } else {
+            return_defer(0);
+        }
     }
 
-    return bytes_read;
+defer:
+    if (read_pipe != -1 || write_pipe != -1) {
+        close(read_pipe);
+        close(write_pipe);
+    };
+    if (dev_null != -1) close(dev_null);
+    return result;
 }
 
 Compositor str2compositor(const char *str) {
-    if (strcmp(str, "Hyprland") == 0) {
-        return COMP_HYPRLAND;
-    } else {
-        return COMP_NONE;
+    for (size_t i = 0; i < COMP_COUNT; ++i) {
+        if (strcmp(str, compositor_name[i]) == 0) return i;
     }
+    return COMP_NONE;
 }

@@ -24,8 +24,11 @@ char *get_fname(const char *dir);
 
 bool grim(Config *config, Mode mode, const char *region);
 
-// Returns the amounts of bytes written to buf
-ssize_t run_cmd(char *buf, size_t nbytes, const char *cmd);
+// Returns the amounts of bytes written to `buf`
+// If failed returns -1 and set `buf` to NULL
+// Set `buf` to NULL to discard the output altogether
+//    In this case it returns 0 on success, returns -1 on failure
+ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes);
 
 Compositor str2compositor(const char *str);
 

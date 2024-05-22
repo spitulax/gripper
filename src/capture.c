@@ -1,6 +1,10 @@
 #include "capture.h"
+#include "utils.h"
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+#define DEFAULT_OUTPUT_SIZE 1024
 
 const char *mode_name[MODE_COUNT] = {
     [MODE_FULL]          = "Full",
@@ -16,16 +20,16 @@ bool capture_full(Config *config) {
 }
 
 bool capture_region(Config *config) {
-    bool         result      = true;
-    const size_t region_size = 1024;
-    char        *region      = malloc(region_size);
-    if (region == NULL) {
-        eprintf("Could not allocate output for running slurp\n");
-    }
-
     if (config->verbose) printf("*Capturing region*\n");
 
-    ssize_t bytes = run_cmd(region, region_size, "slurp");
+    bool  result = true;
+    char *region = malloc(DEFAULT_OUTPUT_SIZE);
+    if (region == NULL) {
+        eprintf("Could not allocate output for running slurp\n");
+        return_defer(false);
+    }
+
+    ssize_t bytes = run_cmd("slurp", region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
         eprintf("Selection cancelled\n");
         return_defer(false);
@@ -40,15 +44,13 @@ defer:
 }
 
 bool capture_last_region(Config *config) {
-    (void)config;
-    printf("Capture last region\n");
-    return true;
+    assert(0 && "unimplemented");
+    if (config->verbose) printf("Capture last region\n");
 }
 
 bool capture_active_window(Config *config) {
-    (void)config;
-    printf("Capture active window\n");
-    return true;
+    assert(0 && "unimplemented");
+    if (config->verbose) printf("Capture active window\n");
 }
 
 bool capture(Config *config) {
