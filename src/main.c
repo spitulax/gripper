@@ -89,26 +89,6 @@ int main(int argc, char *argv[]) {
     }
     config.last_region_file = last_region_file_path;
 
-    // Create the file if it didn't exist
-    {
-        struct stat file_stat;
-        if (stat(config.last_region_file, &file_stat) == -1) {
-            if (errno != EACCES) {
-                cmd     = alloc_strf("touch %s", config.last_region_file);
-                int ret = system(cmd);
-                free(cmd);
-                if (ret != 0) {
-                    eprintf("Could not create file %s\n", config.last_region_file);
-                    return_defer(EXIT_FAILURE);
-                }
-                printf("Created %s\n", config.last_region_file);
-            } else {
-                eprintf("Could not access %s: %s\n", config.last_region_file, strerror(errno));
-                return_defer(EXIT_FAILURE);
-            }
-        }
-    }
-
     if (!capture(&config)) return_defer(EXIT_FAILURE);
 
 defer:
