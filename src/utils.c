@@ -1,6 +1,5 @@
 #include "utils.h"
 #include "prog.h"
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -14,6 +13,13 @@
 static const char *compositor_name[COMP_COUNT] = {
     [COMP_NONE]     = "Not supported",
     [COMP_HYPRLAND] = "Hyprland",
+};
+
+const char *mode_name[MODE_COUNT] = {
+    [MODE_FULL]          = "Full",
+    [MODE_REGION]        = "Region",
+    [MODE_LAST_REGION]   = "Last Region",
+    [MODE_ACTIVE_WINDOW] = "Active Window",
 };
 
 char *alloc_strf(const char *fmt, ...) {
@@ -46,6 +52,13 @@ defer:
     return result;
 }
 
+bool command_found(const char *command) {
+    char *cmd = alloc_strf("which %s >/dev/null 2>&1", command);
+    int   ret = system(cmd);
+    free(cmd);
+    return !ret;
+}
+
 const char *compositor2str(Compositor compositor) {
     return compositor_name[compositor];
 }
@@ -73,28 +86,17 @@ char *get_fname(const char *dir) {
     return ptr;
 };
 
-bool grim(Config *config, Mode mode, const char *region) {
+bool grim(Config *config, const char *region) {
     bool  result = true;
     char *cmd    = NULL;
-    char *fname  = NULL;
+    char *fname  = get_fname(config->screenshot_dir);
+    if (fname == NULL) return_defer(false);
 
-    switch (mode) {
-        case MODE_FULL : {
-            cmd = alloc_strf("grim -c - | wl-copy");
-        } break;
-        case MODE_REGION : {
-            cmd = alloc_strf("grim -g \"%s\" - | wl-copy", region);
-        } break;
-        // TODO: it's unecessary to pass `mode`. Instead do MODE_FULL if region is NULL otherwise
-        // MODE_REGION
-        case MODE_LAST_REGION :
-        case MODE_ACTIVE_WINDOW : {
-            assert(0 && "you should use MODE_REGION");
-        } break;
-        case MODE_COUNT : {
-            assert(0 && "unreachable");
-        }
-    };
+    if (region == NULL) {
+        cmd = alloc_strf("grim -c - > %s", fname);
+    } else {
+        cmd = alloc_strf("grim -g \"%s\" - > %s", region, fname);
+    }
 
     if (config->verbose) printf("$ %s\n", cmd);
     if (run_cmd(cmd, NULL, 0) == -1) {
@@ -102,20 +104,41 @@ bool grim(Config *config, Mode mode, const char *region) {
         return_defer(false);
     }
 
-    fname = get_fname(config->screenshot_dir);
-    if (fname == NULL) return_defer(false);
-
     free(cmd);
-    cmd = alloc_strf("wl-paste > %s", fname);
+    cmd = alloc_strf("wl-copy < %s", fname);
     if (config->verbose) printf("$ %s\n", cmd);
     if (run_cmd(cmd, NULL, 0) == -1) {
         eprintf("Could save image to %s\n", config->screenshot_dir);
         return_defer(false);
     }
 
+    if (!notify(config->mode, fname) && config->verbose) printf("Could not send notification\n");
+
 defer:
     free(cmd);
     free(fname);
+    return result;
+}
+
+const char *mode2str(Mode mode) {
+    return mode_name[mode];
+}
+
+bool notify(Mode mode, const char *fname) {
+    if (!command_found("notify-send")) return false;
+
+    // TODO: maybe print the region?
+    bool  result = true;
+    char *cmd    = alloc_strf(
+        "notify-send -a Wayshot 'Screenshot taken (%s)' 'Saved to %s'", mode2str(mode), fname);
+
+    if (run_cmd(cmd, NULL, 0) == -1) {
+        eprintf("Could not send notification\n");
+        return_defer(false);
+    }
+
+defer:
+    free(cmd);
     return result;
 }
 

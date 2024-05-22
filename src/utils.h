@@ -18,11 +18,17 @@
 
 char *alloc_strf(const char *fmt, ...);
 
+bool command_found(const char *command);
+
 const char *compositor2str(Compositor compositor);
 
 char *get_fname(const char *dir);
 
-bool grim(Config *config, Mode mode, const char *region);
+bool grim(Config *config, const char *region);
+
+const char *mode2str(Mode mode);
+
+bool notify(Mode mode, const char *fname);
 
 // Returns the amounts of bytes written to `buf`
 // If failed returns -1 and set `buf` to NULL

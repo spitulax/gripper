@@ -9,14 +9,7 @@
 
 #define DEFAULT_OUTPUT_SIZE 1024
 
-const char *mode_name[MODE_COUNT] = {
-    [MODE_FULL]          = "Full",
-    [MODE_REGION]        = "Region",
-    [MODE_LAST_REGION]   = "Last Region",
-    [MODE_ACTIVE_WINDOW] = "Active Window",
-};
-
-// NOTE: appends newline into `region`
+// NOTE: replaces last character of `region` into newline
 bool cache_region(Config *config, char *region, size_t nbytes) {
     bool  result            = true;
     FILE *region_cache_file = NULL;
@@ -41,7 +34,7 @@ defer:
 
 bool capture_full(Config *config) {
     if (config->verbose) printf("*Capturing fullscreen*\n");
-    if (!grim(config, MODE_FULL, NULL)) return false;
+    if (!grim(config, NULL)) return false;
     return true;
 }
 
@@ -97,7 +90,7 @@ bool capture_region(Config *config) {
 
     if (config->verbose) printf("Selected region: %s\n", region);
 
-    if (!grim(config, MODE_REGION, region)) return_defer(false);
+    if (!grim(config, region)) return_defer(false);
 
     if (!cache_region(config, region, bytes)) return_defer(false);
 
@@ -139,7 +132,7 @@ bool capture_last_region(Config *config) {
     // TODO: check if the region format is correct
 
     if (config->verbose) printf("Selected region: %s\n", region);
-    if (!grim(config, MODE_REGION, region)) return_defer(false);
+    if (!grim(config, region)) return_defer(false);
 
 defer:
     free(region);
@@ -181,7 +174,7 @@ bool capture_active_window(Config *config) {
     }
     region[bytes - 1] = '\0';    // trim the final newline
 
-    if (!grim(config, MODE_REGION, region)) return_defer(false);
+    if (!grim(config, region)) return_defer(false);
 
     if (!cache_region(config, region, bytes)) return_defer(false);
 
@@ -196,7 +189,7 @@ bool capture(Config *config) {
         printf("Screenshot directory    : %s\n", config->screenshot_dir);
         printf("Last region cache       : %s\n", config->last_region_file);
         printf("Compositor              : %s\n", compositor2str(config->compositor));
-        printf("Mode                    : %s\n", mode_name[config->mode]);
+        printf("Mode                    : %s\n", mode2str(config->mode));
         print_comp_support(config->compositor_supported);
         printf("====================\n");
     }

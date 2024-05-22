@@ -25,6 +25,14 @@ void print_comp_support(bool supported) {
     printf("mode region does not have snap to window.\n");
 }
 
+void print_requirements() {
+    // TODO: check if these commands are available
+    // - grim
+    // - wl-copy (wl-clipboard)
+    // - notify-send
+    printf("Not implemented yet.\n");
+}
+
 void usage(Config *config) {
     printf("Usage: %s <mode> [options]\n", config->prog_name);
     printf("\n");
@@ -42,9 +50,16 @@ void usage(Config *config) {
     // printf("    -f <path>           Where the screenshot is saved to (overrides -d)\n");
     // printf("    -c                  Include cursor in the screenshot\n");
     // printf("    -o <output>         The output name to capture\n");
+    // printf("    --no-cache-region   Used in mode region and active-window\n");
+    // printf("                        Don't cache the region that would be captured\n");
+    // printf("                        This means it will not override the region that\n");
+    // printf("                        should be used by last-region\n");
+    // printf("     --no-clipboard     Don't copy the captured image into the clipboard\n");
     printf("    --verbose           Print extra output\n");
     printf("\n");
     print_comp_support(config->compositor_supported);
+    printf("\n");
+    print_requirements();
 }
 
 // 0 - arguments passed incorrectly
