@@ -1,4 +1,5 @@
 #include "prog.h"
+#include "utils.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -21,16 +22,25 @@ bool parse_mode_args(const char *argv, Config *config) {
 void print_comp_support(bool supported) {
     printf("Your compositor is ");
     printf(supported ? "supported.\n" : "not supported.\n");
-    printf("Mode active-window is unavailable for unsupported compositor and\n");
-    printf("mode region does not have snap to window.\n");
+    printf("    Mode active-window is unavailable for unsupported compositor and\n");
+    printf("    mode region does not have snap to window.\n");
 }
 
-void print_requirements() {
-    // TODO: check if these commands are available
-    // - grim
-    // - wl-copy (wl-clipboard)
-    // - notify-send
-    printf("Not implemented yet.\n");
+void check_requirements() {
+#define CMDS_COUNT 3
+    const char *cmds[CMDS_COUNT] = {
+        "grim",
+        "wl-copy",
+        "notify-send",
+    };
+
+    printf("Check if needed commands are found:\n");
+    for (size_t i = 0; i < CMDS_COUNT; ++i) {
+        const char *msg      = command_found(cmds[i]) ? "found" : "not found";
+        bool        optional = false;
+        if (i == 2) optional = true;
+        printf(" - %s: %s%s\n", cmds[i], msg, optional ? " (optional)" : "");
+    }
 }
 
 void usage(Config *config) {
@@ -43,6 +53,7 @@ void usage(Config *config) {
     printf("    active-window       Capture active window\n");
     printf("    --help, -h          Show this help\n");
     printf("    --version, -v       Show version\n");
+    printf("    --check             Check availability of needed commands\n");
     printf("Options:\n");
     printf("    -d <dir>            Where the screenshot is saved (defaults to environment\n");
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots)\n");
@@ -55,11 +66,8 @@ void usage(Config *config) {
     // printf("                        This means it will not override the region that\n");
     // printf("                        should be used by last-region\n");
     // printf("     --no-clipboard     Don't copy the captured image into the clipboard\n");
+    // TODO: automatically fallback to --no-clipboard if wl-copy is not found
     printf("    --verbose           Print extra output\n");
-    printf("\n");
-    print_comp_support(config->compositor_supported);
-    printf("\n");
-    print_requirements();
 }
 
 // 0 - arguments passed incorrectly
@@ -79,6 +87,10 @@ int parse_args(int argc, char *argv[], Config *config) {
                 return 1;
             } else if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
                 printf("%s %s\n", config->prog_name, config->prog_version);
+                return 1;
+            } else if (strcmp(argv[1], "--check") == 0) {
+                print_comp_support(config->compositor_supported);
+                check_requirements();
                 return 1;
             }
             if (!parse_mode_args(argv[i], config)) break;
