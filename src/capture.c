@@ -16,6 +16,29 @@ const char *mode_name[MODE_COUNT] = {
     [MODE_ACTIVE_WINDOW] = "Active Window",
 };
 
+// NOTE: appends newline into `region`
+bool cache_region(Config *config, char *region, size_t nbytes) {
+    bool  result            = true;
+    FILE *region_cache_file = NULL;
+
+    region_cache_file = fopen(config->last_region_file, "w+");
+    if (region_cache_file == NULL) {
+        eprintf("Could not open %s: %s\n", config->last_region_file, strerror(errno));
+        return_defer(false);
+    }
+    // bring back the newline before writing the region to the file
+    // because some editors automatically inserts newline to the file when you save it
+    region[nbytes - 1] = '\n';
+    if (fputs(region, region_cache_file) < 0) {
+        eprintf("Could not write to %s\n", config->last_region_file);
+        return_defer(false);
+    }
+
+defer:
+    if (region_cache_file != NULL) fclose(region_cache_file);
+    return result;
+}
+
 bool capture_full(Config *config) {
     if (config->verbose) printf("*Capturing fullscreen*\n");
     if (!grim(config, MODE_FULL, NULL)) return false;
@@ -25,12 +48,19 @@ bool capture_full(Config *config) {
 bool capture_region(Config *config) {
     if (config->verbose) printf("*Capturing region*\n");
 
-    bool  result            = true;
-    FILE *region_cache_file = NULL;
-    char *region            = malloc(DEFAULT_OUTPUT_SIZE);
+    bool  result = true;
+    char *region = malloc(DEFAULT_OUTPUT_SIZE);
     if (region == NULL) {
         eprintf("Could not allocate output for running slurp\n");
         return_defer(false);
+    }
+
+    if (config->verbose) {
+        if (config->compositor_supported) {
+            printf("Snap selection to windows is enabled\n");
+        } else {
+            printf("Snap selection to windows is disabled\n");
+        }
     }
 
     char *cmd = NULL;
@@ -69,27 +99,15 @@ bool capture_region(Config *config) {
 
     if (!grim(config, MODE_REGION, region)) return_defer(false);
 
-    region_cache_file = fopen(config->last_region_file, "w+");
-    if (region_cache_file == NULL) {
-        eprintf("Could not open %s: %s\n", config->last_region_file, strerror(errno));
-        return_defer(false);
-    }
-    // bring back the newline before writing the region to the file
-    // because some editors automatically inserts newline to the file when you save it
-    region[bytes - 1] = '\n';
-    if (fputs(region, region_cache_file) < 0) {
-        eprintf("Could not write to %s\n", config->last_region_file);
-        return_defer(false);
-    }
+    if (!cache_region(config, region, bytes)) return_defer(false);
 
 defer:
     free(region);
-    if (region_cache_file != NULL) fclose(region_cache_file);
     return result;
 }
 
 bool capture_last_region(Config *config) {
-    if (config->verbose) printf("Capture last region\n");
+    if (config->verbose) printf("*Capturing last region*\n");
 
     bool  result            = true;
     FILE *region_cache_file = NULL;
@@ -130,8 +148,46 @@ defer:
 }
 
 bool capture_active_window(Config *config) {
-    assert(0 && "unimplemented");
-    if (config->verbose) printf("Capture active window\n");
+    if (!config->compositor_supported) {
+        print_comp_support(config->compositor_supported);
+        return false;
+    }
+
+    if (config->verbose) printf("*Capturing active window*\n");
+
+    bool  result = true;
+    char *region = malloc(DEFAULT_OUTPUT_SIZE);
+    if (region == NULL) {
+        eprintf("Could not allocate for region\n");
+        return_defer(false);
+    }
+
+    char *cmd = NULL;
+    switch (config->compositor) {
+        case COMP_HYPRLAND : {
+            cmd =
+                "hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"'";
+        } break;
+        case COMP_NONE :
+        case COMP_COUNT : {
+            assert(0 && "unreachable");
+        }
+    }
+
+    ssize_t bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
+    if (bytes == -1 || region == NULL) {
+        eprintf("Could not get information about window position\n");
+        return_defer(false);
+    }
+    region[bytes - 1] = '\0';    // trim the final newline
+
+    if (!grim(config, MODE_REGION, region)) return_defer(false);
+
+    if (!cache_region(config, region, bytes)) return_defer(false);
+
+defer:
+    free(region);
+    return result;
 }
 
 bool capture(Config *config) {
