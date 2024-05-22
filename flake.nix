@@ -1,5 +1,5 @@
 {
-  description = "Simple and easy to use wrapper to grim in C";
+  description = "Simple and easy to use screenshot program for Wayland";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
@@ -24,8 +24,8 @@
           pkgs = pkgsFor.${system};
         in
         {
-          default = self.packages.${system}.wayshot;
-          inherit (pkgs) wayshot wayshot-debug;
+          default = self.packages.${system}.waysnip;
+          inherit (pkgs) waysnip waysnip-debug;
         });
 
       devShells = eachSystem (system:

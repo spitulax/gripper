@@ -27,9 +27,10 @@ void print_comp_support(bool supported) {
 }
 
 void check_requirements() {
-#define CMDS_COUNT 3
+#define CMDS_COUNT 4
     const char *cmds[CMDS_COUNT] = {
         "grim",
+        "slurp",
         "wl-copy",
         "notify-send",
     };
@@ -38,7 +39,7 @@ void check_requirements() {
     for (size_t i = 0; i < CMDS_COUNT; ++i) {
         const char *msg      = command_found(cmds[i]) ? "found" : "not found";
         bool        optional = false;
-        if (i == 2) optional = true;
+        if (i == 3) optional = true;
         printf(" - %s: %s%s\n", cmds[i], msg, optional ? " (optional)" : "");
     }
 }
@@ -49,11 +50,11 @@ void usage(Config *config) {
     printf("Modes:\n");
     printf("    full                Capture fullscreen\n");
     printf("    region              Capture selected region using slurp\n");
-    printf("    last-region         Capture last selected region\n");
     printf("    active-window       Capture active window\n");
+    printf("    last-region         Capture last selected region\n");
     printf("    --help, -h          Show this help\n");
     printf("    --version, -v       Show version\n");
-    printf("    --check             Check availability of needed commands\n");
+    printf("    --check             Check compositor support and needed commands\n");
     printf("Options:\n");
     printf("    -d <dir>            Where the screenshot is saved (defaults to environment\n");
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots)\n");

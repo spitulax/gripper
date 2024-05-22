@@ -14,11 +14,11 @@
 #include "prog.h"
 #include "utils.h"
 
-#define PROG_NAME    "wayshot"
+#define PROG_NAME    "waysnip"
 #define PROG_VERSION "v0.1.0"
 
 #define DEFAULT_DIR       "Pictures/Screenshots"
-#define LAST_REGION_FNAME "wayshot-last-region"
+#define LAST_REGION_FNAME "waysnip-last-region"
 
 int main(int argc, char *argv[]) {
     int   result = EXIT_SUCCESS;

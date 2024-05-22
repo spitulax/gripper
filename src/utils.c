@@ -128,9 +128,10 @@ bool notify(Mode mode, const char *fname) {
     if (!command_found("notify-send")) return false;
 
     // TODO: maybe print the region?
+    // TODO: add actions to the notification that maybe brings an option to view the image
     bool  result = true;
     char *cmd    = alloc_strf(
-        "notify-send -a Wayshot 'Screenshot taken (%s)' 'Saved to %s'", mode2str(mode), fname);
+        "notify-send -a Waysnip 'Screenshot taken (%s)' 'Saved to %s'", mode2str(mode), fname);
 
     if (run_cmd(cmd, NULL, 0) == -1) {
         eprintf("Could not send notification\n");

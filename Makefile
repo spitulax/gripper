@@ -1,7 +1,7 @@
 PREFIX ?= $(HOME)/.local
 BIN_DIR ?= $(PREFIX)/bin
 
-TARGET_EXEC ?= wayshot
+TARGET_EXEC ?= waysnip
 BUILD_DIR ?= ./build
 SRC_DIR	?= ./src
 
