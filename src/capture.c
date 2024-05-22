@@ -2,8 +2,10 @@
 #include "prog.h"
 #include "utils.h"
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define DEFAULT_OUTPUT_SIZE 1024
 
@@ -34,6 +36,8 @@ bool capture_region(Config *config) {
     char *cmd = NULL;
     switch (config->compositor) {
         case COMP_HYPRLAND : {
+            // BUG: when you switch workspace while on slurp
+            // selection still snaps onto the position of windows in initial workspace
             cmd =
                 // lists windows in Hyprland
                 "hyprctl clients -j | "
@@ -59,14 +63,24 @@ bool capture_region(Config *config) {
         eprintf("Selection cancelled\n");
         return_defer(false);
     }
-    region[bytes - 1] = '\0';    // trim the final endline
+    region[bytes - 1] = '\0';    // trim the final newline
 
     if (config->verbose) printf("Selected region: %s\n", region);
 
     if (!grim(config, MODE_REGION, region)) return_defer(false);
 
     region_cache_file = fopen(config->last_region_file, "w+");
-    fputs(region, region_cache_file);
+    if (region_cache_file == NULL) {
+        eprintf("Could not open %s: %s\n", config->last_region_file, strerror(errno));
+        return_defer(false);
+    }
+    // bring back the newline before writing the region to the file
+    // because some editors automatically inserts newline to the file when you save it
+    region[bytes - 1] = '\n';
+    if (fputs(region, region_cache_file) < 0) {
+        eprintf("Could not write to %s\n", config->last_region_file);
+        return_defer(false);
+    }
 
 defer:
     free(region);
@@ -75,8 +89,44 @@ defer:
 }
 
 bool capture_last_region(Config *config) {
-    assert(0 && "unimplemented");
     if (config->verbose) printf("Capture last region\n");
+
+    bool  result            = true;
+    FILE *region_cache_file = NULL;
+    char *region            = malloc(DEFAULT_OUTPUT_SIZE);
+    if (region == NULL) {
+        eprintf("Could not allocate for %s\n", config->last_region_file);
+        return_defer(false);
+    }
+
+    region_cache_file = fopen(config->last_region_file, "r");
+    if (region_cache_file == NULL) {
+        if (errno == ENOENT) {
+            eprintf("Run `%s region` to set the region used for this mode\n", config->prog_name);
+            return_defer(false);
+        } else {
+            eprintf("Could not open %s: %s\n", config->last_region_file, strerror(errno));
+            return_defer(false);
+        }
+    }
+
+    size_t bytes = fread(region, 1, DEFAULT_OUTPUT_SIZE, region_cache_file);
+    if (ferror(region_cache_file) != 0) {
+        eprintf("Could not read %s\n", config->last_region_file);
+        eprintf("Remove it and run `%s region` to set the region\n", config->prog_name);
+        return_defer(false);
+    }
+    region[bytes - 1] = '\0';    // trim the final newline
+
+    // TODO: check if the region format is correct
+
+    if (config->verbose) printf("Selected region: %s\n", region);
+    if (!grim(config, MODE_REGION, region)) return_defer(false);
+
+defer:
+    free(region);
+    if (region_cache_file != NULL) fclose(region_cache_file);
+    return result;
 }
 
 bool capture_active_window(Config *config) {

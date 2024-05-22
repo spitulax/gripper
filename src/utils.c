@@ -85,8 +85,14 @@ bool grim(Config *config, Mode mode, const char *region) {
         case MODE_REGION : {
             cmd = alloc_strf("grim -g \"%s\" - | wl-copy", region);
         } break;
-        default : {
+        case MODE_LAST_REGION : {
+            assert(0 && "you should use MODE_REGION");
+        } break;
+        case MODE_ACTIVE_WINDOW : {
             assert(0 && "unimplemented");
+        } break;
+        case MODE_COUNT : {
+            assert(0 && "unreachable");
         }
     };
 
