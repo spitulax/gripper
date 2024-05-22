@@ -1,5 +1,5 @@
 {
-  description = "Simple and easy to use screenshot program for Wayland";
+  description = "Simple and easy to use screenshot utility for Wayland";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
