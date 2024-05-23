@@ -60,7 +60,7 @@ void usage(Config *config) {
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots)\n");
     // TODO:
     // printf("    -f <path>           Where the screenshot is saved to (overrides -d)\n");
-    // printf("    -c                  Include cursor in the screenshot\n");
+    printf("    -c                  Include cursor in the screenshot\n");
     // printf("    -o <output>         The output name to capture\n");
     // printf("    --no-cache-region   Used in mode region and active-window\n");
     // printf("                        Don't cache the region that would be captured\n");
@@ -97,6 +97,8 @@ int parse_args(int argc, char *argv[], Config *config) {
             if (!parse_mode_args(argv[i], config)) break;
         } else if (strcmp(argv[i], "--verbose") == 0) {
             config->verbose = true;
+        } else if (strcmp(argv[i], "-c") == 0) {
+            config->cursor = true;
         } else if (strcmp(argv[i], "-d") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->screenshot_dir = argv[++i];

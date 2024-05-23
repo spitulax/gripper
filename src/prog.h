@@ -26,7 +26,9 @@ typedef struct {
     Compositor  compositor;
     bool        compositor_supported;
     Mode        mode;
-    bool        verbose;
+
+    bool verbose;
+    bool cursor;
 } Config;
 
 int  parse_args(int argc, char *argv[], Config *config);

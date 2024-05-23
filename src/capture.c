@@ -1,4 +1,5 @@
 #include "capture.h"
+#include "grim.h"
 #include "prog.h"
 #include "utils.h"
 #include <assert.h>
@@ -212,5 +213,5 @@ bool capture(Config *config) {
         }
     }
 
-    return false;
+    assert(0 && "unreachable");
 }
