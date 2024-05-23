@@ -17,14 +17,14 @@ bool cache_region(Config *config, char *region, size_t nbytes) {
 
     region_cache_file = fopen(config->last_region_file, "w+");
     if (region_cache_file == NULL) {
-        eprintf("Could not open %s: %s\n", config->last_region_file, strerror(errno));
+        eprintf("Failed to open %s: %s\n", config->last_region_file, strerror(errno));
         return_defer(false);
     }
     // bring back the newline before writing the region to the file
     // because some editors automatically inserts newline to the file when you save it
     region[nbytes - 1] = '\n';
     if (fputs(region, region_cache_file) < 0) {
-        eprintf("Could not write to %s\n", config->last_region_file);
+        eprintf("Failed to write to %s\n", config->last_region_file);
         return_defer(false);
     }
 
@@ -44,10 +44,7 @@ bool capture_region(Config *config) {
 
     bool  result = true;
     char *region = malloc(DEFAULT_OUTPUT_SIZE);
-    if (region == NULL) {
-        eprintf("Could not allocate output for running slurp\n");
-        return_defer(false);
-    }
+    assert(region != NULL);
 
     if (config->verbose) {
         if (config->compositor_supported) {
@@ -60,7 +57,7 @@ bool capture_region(Config *config) {
     char *cmd = NULL;
     switch (config->compositor) {
         case COMP_HYPRLAND : {
-            // BUG: when you switch workspace while on slurp
+            // TODO: when you switch workspace while on slurp
             // selection still snaps onto the position of windows in initial workspace
             cmd =
                 // lists windows in Hyprland
@@ -106,10 +103,7 @@ bool capture_last_region(Config *config) {
     bool  result            = true;
     FILE *region_cache_file = NULL;
     char *region            = malloc(DEFAULT_OUTPUT_SIZE);
-    if (region == NULL) {
-        eprintf("Could not allocate for %s\n", config->last_region_file);
-        return_defer(false);
-    }
+    assert(region != NULL);
 
     region_cache_file = fopen(config->last_region_file, "r");
     if (region_cache_file == NULL) {
@@ -117,14 +111,14 @@ bool capture_last_region(Config *config) {
             eprintf("Run `%s region` to set the region used for this mode\n", config->prog_name);
             return_defer(false);
         } else {
-            eprintf("Could not open %s: %s\n", config->last_region_file, strerror(errno));
+            eprintf("Failed to open %s: %s\n", config->last_region_file, strerror(errno));
             return_defer(false);
         }
     }
 
     size_t bytes = fread(region, 1, DEFAULT_OUTPUT_SIZE, region_cache_file);
     if (ferror(region_cache_file) != 0) {
-        eprintf("Could not read %s\n", config->last_region_file);
+        eprintf("Failed to read %s\n", config->last_region_file);
         eprintf("Remove it and run `%s region` to set the region\n", config->prog_name);
         return_defer(false);
     }
@@ -151,10 +145,7 @@ bool capture_active_window(Config *config) {
 
     bool  result = true;
     char *region = malloc(DEFAULT_OUTPUT_SIZE);
-    if (region == NULL) {
-        eprintf("Could not allocate for region\n");
-        return_defer(false);
-    }
+    assert(region != NULL);
 
     char *cmd = NULL;
     switch (config->compositor) {
@@ -170,7 +161,7 @@ bool capture_active_window(Config *config) {
 
     ssize_t bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
-        eprintf("Could not get information about window position\n");
+        eprintf("Failed to get information about window position\n");
         return_defer(false);
     }
     region[bytes - 1] = '\0';    // trim the final newline
@@ -191,6 +182,7 @@ bool capture(Config *config) {
         printf("Last region cache       : %s\n", config->last_region_file);
         printf("Compositor              : %s\n", compositor2str(config->compositor));
         printf("Mode                    : %s\n", mode2str(config->mode));
+        printf("Cursor                  : %s\n", config->cursor ? "Shown" : "Hidden");
         print_comp_support(config->compositor_supported);
         printf("====================\n");
     }

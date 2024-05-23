@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "prog.h"
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -28,18 +29,15 @@ char *alloc_strf(const char *fmt, ...) {
 
     va_start(args, fmt);
     int size = vsnprintf(NULL, 0, fmt, args);
-    if (size < 0) {
-        eprintf("Could not allocate string\n");
-        return_defer(NULL);
-    }
+    assert(size >= 0 && "failed to count string size");
     va_end(args);
 
     va_start(args, fmt);
     char *ptr = malloc(size + 1);
-    if (ptr == NULL) return_defer(NULL);
+    assert(ptr != NULL);
     int result_size = vsnprintf(ptr, size + 1, fmt, args);
     if (result_size != size) {
-        eprintf("Could not write string to buffer: %s\n", strerror(errno));
+        eprintf("alloc_strf: Failed to write string to buffer: %s\n", strerror(errno));
         free(ptr);
         return_defer(NULL);
     }
@@ -52,7 +50,8 @@ defer:
 
 bool command_found(const char *command) {
     char *cmd = alloc_strf("which %s >/dev/null 2>&1", command);
-    int   ret = system(cmd);
+    assert(cmd != NULL);
+    int ret = system(cmd);
     free(cmd);
     return !ret;
 }
@@ -66,7 +65,7 @@ char *get_fname(const char *dir) {
     struct tm now;
 
     if (localtime_r(&now_time, &now) == NULL) {
-        eprintf("Could not get time\n");
+        eprintf("get_fname: Failed to get local time\n");
         return NULL;
     }
 
@@ -99,7 +98,7 @@ ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes) {
 
     if (buf != NULL) {
         if (pipe(pipe_fd) == -1) {
-            eprintf("Could not create pipes: %s\n", strerror(errno));
+            eprintf("run_cmd: Failed to create pipes: %s\n", strerror(errno));
             return_defer(-1);
         }
         read_pipe  = pipe_fd[0];
@@ -108,7 +107,7 @@ ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes) {
 
     pid_t pid = fork();
     if (pid == -1) {
-        eprintf("Could not fork child process: %s\n", strerror(errno));
+        eprintf("run_cmd: Failed to fork child process: %s\n", strerror(errno));
         return_defer(-1);
     } else if (pid == 0) {
         if (buf != NULL) {
@@ -122,12 +121,12 @@ ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes) {
         }
         close(dev_null);
         execl("/bin/sh", "sh", "-c", cmd, (char *)NULL);
-        eprintf("Could not run `%s`: %s\n", cmd, strerror(errno));
+        eprintf("run_cmd: Failed not run `%s`: %s\n", cmd, strerror(errno));
         exit(EXIT_FAILURE);
     } else {
         int status;
         if (waitpid(pid, &status, 0) == -1) {
-            eprintf("`%s` could not terminate: %s\n", cmd, strerror(errno));
+            eprintf("run_cmd: `%s` could not terminate: %s\n", cmd, strerror(errno));
             return_defer(-1);
         }
 

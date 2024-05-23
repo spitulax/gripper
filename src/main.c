@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +25,7 @@ int main(int argc, char *argv[]) {
     // variables that will be freed after defer must be initialized before any call to return_defer
     char *alt_dir               = NULL;
     char *last_region_file_path = NULL;
+    char *cache_dir             = NULL;
 
     static Config config;
     config.prog_name            = PROG_NAME;
@@ -43,20 +43,14 @@ int main(int argc, char *argv[]) {
     }
 
     const char *home_dir = getenv("HOME");
-    if (home_dir == NULL) {
-        eprintf("Environment variable HOME is not set\n");
-        return_defer(EXIT_FAILURE);
-    }
+    assert(home_dir != NULL && "HOME dir is not set");
 
     // Asssign config.screenshot_dir
     const char *screenshot_dir = getenv("SCREENSHOT_DIR");
     if (config.screenshot_dir == NULL) {
         if (screenshot_dir == NULL) {
             alt_dir = alloc_strf("%s/" DEFAULT_DIR, home_dir);
-            if (alt_dir == NULL) {
-                eprintf("Could not allocate the path to screenshot directory\n");
-                return_defer(EXIT_FAILURE);
-            }
+            assert(alt_dir != NULL);
             config.screenshot_dir = alt_dir;
         } else {
             config.screenshot_dir = screenshot_dir;
@@ -67,32 +61,34 @@ int main(int argc, char *argv[]) {
     {
         struct stat dir_stat;
         if (stat(config.screenshot_dir, &dir_stat)) {
-            cmd     = alloc_strf("mkdir -p %s", config.screenshot_dir);
+            cmd = alloc_strf("mkdir -p %s", config.screenshot_dir);
+            assert(cmd != NULL);
             int ret = system(cmd);
             free(cmd);
             if (ret == 0) {
                 printf("Created %s\n", config.screenshot_dir);
             } else {
-                eprintf("Could not create directory %s\n", config.screenshot_dir);
+                eprintf("Failed to create directory %s\n", config.screenshot_dir);
                 return_defer(EXIT_FAILURE);
             }
         }
     }
 
     // Assign config.last_region_file
-    const char *cache_dir = getenv("XDG_CACHE_HOME");
-    if (cache_dir == NULL) {}
-    last_region_file_path = alloc_strf("%s/" LAST_REGION_FNAME, cache_dir);
-    if (last_region_file_path == NULL) {
-        eprintf("Could not allocate the path to %s/" LAST_REGION_FNAME "\n", cache_dir);
-        return_defer(EXIT_FAILURE);
+    cache_dir = alloc_strf("%s", getenv("XDG_CACHE_HOME"));
+    if (cache_dir == NULL) {
+        cache_dir = alloc_strf("%s/.cache", home_dir);
+        assert(cache_dir != NULL);
     }
+    last_region_file_path = alloc_strf("%s/" LAST_REGION_FNAME, cache_dir);
+    assert(last_region_file_path != NULL);
     config.last_region_file = last_region_file_path;
 
     if (!capture(&config)) return_defer(EXIT_FAILURE);
 
 defer:
     free(alt_dir);
+    free(cache_dir);
     free(last_region_file_path);
     return result;
 }

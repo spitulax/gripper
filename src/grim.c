@@ -1,5 +1,6 @@
 #include "grim.h"
 #include "utils.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,9 +12,10 @@ bool notify(Mode mode, const char *fname) {
     bool  result = true;
     char *cmd    = alloc_strf(
         "notify-send -a Waysnip 'Screenshot taken (%s)' 'Saved to %s'", mode2str(mode), fname);
+    assert(cmd != NULL);
 
     if (run_cmd(cmd, NULL, 0) == -1) {
-        eprintf("Could not send notification\n");
+        eprintf("Failed to send notification\n");
         return_defer(false);
     }
 
@@ -27,15 +29,17 @@ bool grim(Config *config, const char *region) {
     char *cmd     = NULL;
     char *options = NULL;
     char *fname   = get_fname(config->screenshot_dir);
-    if (fname == NULL) return_defer(false);
+    assert(fname != NULL);
 
     options = alloc_strf("%s", config->cursor ? "-c" : "");
+    assert(options != NULL);
 
     if (region == NULL) {
         cmd = alloc_strf("grim %s - > %s", options, fname);
     } else {
         cmd = alloc_strf("grim %s -g \"%s\" - > %s", options, region, fname);
     }
+    assert(cmd != NULL);
 
     if (config->verbose) printf("$ %s\n", cmd);
     if (run_cmd(cmd, NULL, 0) == -1) {
@@ -45,13 +49,14 @@ bool grim(Config *config, const char *region) {
 
     free(cmd);
     cmd = alloc_strf("wl-copy < %s", fname);
+    assert(cmd != NULL);
     if (config->verbose) printf("$ %s\n", cmd);
     if (run_cmd(cmd, NULL, 0) == -1) {
-        eprintf("Could save image to %s\n", config->screenshot_dir);
+        eprintf("Failed to save image to %s\n", config->screenshot_dir);
         return_defer(false);
     }
 
-    if (!notify(config->mode, fname) && config->verbose) printf("Could not send notification\n");
+    if (!notify(config->mode, fname) && config->verbose) printf("Notification was not sent\n");
 
 defer:
     free(options);
