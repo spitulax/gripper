@@ -1,7 +1,8 @@
 #include "capture.h"
 #include "grim.h"
 #include "prog.h"
-#include "utils.h"
+#include "utils/arena.h"
+#include "utils/utils.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -42,9 +43,7 @@ bool capture_full(Config *config) {
 bool capture_region(Config *config) {
     if (config->verbose) printf("*Capturing region*\n");
 
-    bool  result = true;
-    char *region = malloc(DEFAULT_OUTPUT_SIZE);
-    assert(region != NULL);
+    char *region = arena_alloc(&config->arena, DEFAULT_OUTPUT_SIZE);
 
     if (config->verbose) {
         if (config->compositor_supported) {
@@ -82,19 +81,17 @@ bool capture_region(Config *config) {
     ssize_t bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
         eprintf("Selection cancelled\n");
-        return_defer(false);
+        return false;
     }
     region[bytes - 1] = '\0';    // trim the final newline
 
     if (config->verbose) printf("Selected region: %s\n", region);
 
-    if (!grim(config, region)) return_defer(false);
+    if (!grim(config, region)) return false;
 
-    if (!cache_region(config, region, bytes)) return_defer(false);
+    if (!cache_region(config, region, bytes)) return false;
 
-defer:
-    free(region);
-    return result;
+    return true;
 }
 
 bool capture_last_region(Config *config) {
@@ -102,8 +99,7 @@ bool capture_last_region(Config *config) {
 
     bool  result            = true;
     FILE *region_cache_file = NULL;
-    char *region            = malloc(DEFAULT_OUTPUT_SIZE);
-    assert(region != NULL);
+    char *region            = arena_alloc(&config->arena, DEFAULT_OUTPUT_SIZE);
 
     region_cache_file = fopen(config->last_region_file, "r");
     if (region_cache_file == NULL) {
@@ -130,7 +126,6 @@ bool capture_last_region(Config *config) {
     if (!grim(config, region)) return_defer(false);
 
 defer:
-    free(region);
     if (region_cache_file != NULL) fclose(region_cache_file);
     return result;
 }
@@ -143,9 +138,7 @@ bool capture_active_window(Config *config) {
 
     if (config->verbose) printf("*Capturing active window*\n");
 
-    bool  result = true;
-    char *region = malloc(DEFAULT_OUTPUT_SIZE);
-    assert(region != NULL);
+    char *region = arena_alloc(&config->arena, DEFAULT_OUTPUT_SIZE);
 
     char *cmd = NULL;
     switch (config->compositor) {
@@ -162,17 +155,15 @@ bool capture_active_window(Config *config) {
     ssize_t bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
         eprintf("Failed to get information about window position\n");
-        return_defer(false);
+        return false;
     }
     region[bytes - 1] = '\0';    // trim the final newline
 
-    if (!grim(config, region)) return_defer(false);
+    if (!grim(config, region)) return false;
 
-    if (!cache_region(config, region, bytes)) return_defer(false);
+    if (!cache_region(config, region, bytes)) return false;
 
-defer:
-    free(region);
-    return result;
+    return true;
 }
 
 bool capture(Config *config) {

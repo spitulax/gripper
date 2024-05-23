@@ -1,6 +1,7 @@
 #ifndef PROG_H
 #define PROG_H
 
+#include "utils/arena.h"
 #include <stdbool.h>
 
 typedef enum {
@@ -18,6 +19,8 @@ typedef enum {
 } Compositor;
 
 typedef struct {
+    Arena arena;
+
     const char *prog_name;
     const char *prog_version;
     const char *path;

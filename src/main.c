@@ -11,13 +11,16 @@
 
 #include "capture.h"
 #include "prog.h"
-#include "utils.h"
+#include "utils/arena.h"
+#include "utils/utils.h"
 
 #define PROG_NAME    "waysnip"
 #define PROG_VERSION "v0.1.0"
 
 #define DEFAULT_DIR       "Pictures/Screenshots"
 #define LAST_REGION_FNAME "waysnip-last-region"
+
+#define alloc_strf(fmt, ...) string_alloc(&config.arena, fmt, __VA_ARGS__)
 
 int main(int argc, char *argv[]) {
     int   result = EXIT_SUCCESS;
@@ -49,8 +52,7 @@ int main(int argc, char *argv[]) {
     const char *screenshot_dir = getenv("SCREENSHOT_DIR");
     if (config.screenshot_dir == NULL) {
         if (screenshot_dir == NULL) {
-            alt_dir = alloc_strf("%s/" DEFAULT_DIR, home_dir);
-            assert(alt_dir != NULL);
+            alt_dir               = alloc_strf("%s/" DEFAULT_DIR, home_dir);
             config.screenshot_dir = alt_dir;
         } else {
             config.screenshot_dir = screenshot_dir;
@@ -61,10 +63,8 @@ int main(int argc, char *argv[]) {
     {
         struct stat dir_stat;
         if (stat(config.screenshot_dir, &dir_stat)) {
-            cmd = alloc_strf("mkdir -p %s", config.screenshot_dir);
-            assert(cmd != NULL);
+            cmd     = alloc_strf("mkdir -p %s", config.screenshot_dir);
             int ret = system(cmd);
-            free(cmd);
             if (ret == 0) {
                 printf("Created %s\n", config.screenshot_dir);
             } else {
@@ -75,20 +75,16 @@ int main(int argc, char *argv[]) {
     }
 
     // Assign config.last_region_file
-    cache_dir = alloc_strf("%s", getenv("XDG_CACHE_HOME"));
+    cache_dir = getenv("XDG_CACHE_HOME");
     if (cache_dir == NULL) {
         cache_dir = alloc_strf("%s/.cache", home_dir);
-        assert(cache_dir != NULL);
     }
-    last_region_file_path = alloc_strf("%s/" LAST_REGION_FNAME, cache_dir);
-    assert(last_region_file_path != NULL);
+    last_region_file_path   = alloc_strf("%s/" LAST_REGION_FNAME, cache_dir);
     config.last_region_file = last_region_file_path;
 
     if (!capture(&config)) return_defer(EXIT_FAILURE);
 
 defer:
-    free(alt_dir);
-    free(cache_dir);
-    free(last_region_file_path);
+    arena_free(&config.arena);
     return result;
 }

@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "prog.h"
+#include "../prog.h"
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -16,13 +16,13 @@
         fprintf(stderr, __VA_ARGS__);                                                              \
     } while (0)
 
-char *alloc_strf(const char *fmt, ...);
+char *malloc_strf(const char *fmt, ...);
 
 bool command_found(const char *command);
 
 const char *compositor2str(Compositor compositor);
 
-char *get_fname(const char *dir);
+char *get_fname(Config *config);
 
 const char *mode2str(Mode mode);
 

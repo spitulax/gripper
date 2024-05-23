@@ -1,5 +1,6 @@
 #include "utils.h"
-#include "prog.h"
+#include "../prog.h"
+#include "arena.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -23,8 +24,7 @@ static const char *mode_name[MODE_COUNT] = {
     [MODE_ACTIVE_WINDOW] = "Active Window",
 };
 
-char *alloc_strf(const char *fmt, ...) {
-    char   *result = NULL;
+char *malloc_strf(const char *fmt, ...) {
     va_list args;
 
     va_start(args, fmt);
@@ -32,24 +32,19 @@ char *alloc_strf(const char *fmt, ...) {
     assert(size >= 0 && "failed to count string size");
     va_end(args);
 
-    va_start(args, fmt);
     char *ptr = malloc(size + 1);
     assert(ptr != NULL);
-    int result_size = vsnprintf(ptr, size + 1, fmt, args);
-    if (result_size != size) {
-        eprintf("alloc_strf: Failed to write string to buffer: %s\n", strerror(errno));
-        free(ptr);
-        return_defer(NULL);
-    }
-    return_defer(ptr);
 
-defer:
+    va_start(args, fmt);
+    int result_size = vsnprintf(ptr, size + 1, fmt, args);
+    assert(result_size == size);
     va_end(args);
-    return result;
+
+    return ptr;
 }
 
 bool command_found(const char *command) {
-    char *cmd = alloc_strf("which %s >/dev/null 2>&1", command);
+    char *cmd = malloc_strf("which %s >/dev/null 2>&1", command);
     assert(cmd != NULL);
     int ret = system(cmd);
     free(cmd);
@@ -60,7 +55,7 @@ const char *compositor2str(Compositor compositor) {
     return compositor_name[compositor];
 }
 
-char *get_fname(const char *dir) {
+char *get_fname(Config *config) {
     time_t    now_time = time(NULL);
     struct tm now;
 
@@ -69,14 +64,15 @@ char *get_fname(const char *dir) {
         return NULL;
     }
 
-    char *ptr = alloc_strf("%s/Screenshot_%04d%02d%02d_%02d%02d%02d.png",
-                           dir,
-                           now.tm_year + 1900,
-                           now.tm_mon + 1,
-                           now.tm_mday,
-                           now.tm_hour,
-                           now.tm_min,
-                           now.tm_sec);
+    char *ptr = string_alloc(&config->arena,
+                             "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.png",
+                             config->screenshot_dir,
+                             now.tm_year + 1900,
+                             now.tm_mon + 1,
+                             now.tm_mday,
+                             now.tm_hour,
+                             now.tm_min,
+                             now.tm_sec);
 
     if (ptr == NULL) return NULL;
 

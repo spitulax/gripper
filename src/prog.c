@@ -1,5 +1,5 @@
 #include "prog.h"
-#include "utils.h"
+#include "utils/utils.h"
 #include <stdio.h>
 #include <string.h>
 
