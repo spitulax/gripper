@@ -44,11 +44,13 @@ bool grim(Config *config, const char *region) {
         return false;
     }
 
-    cmd = alloc_strf("wl-copy < %s", fname);
-    if (config->verbose) printf("$ %s\n", cmd);
-    if (run_cmd(cmd, NULL, 0) == -1) {
-        eprintf("Failed to save image to %s\n", config->screenshot_dir);
-        return false;
+    if (!config->no_clipboard) {
+        cmd = alloc_strf("wl-copy < %s", fname);
+        if (config->verbose) printf("$ %s\n", cmd);
+        if (run_cmd(cmd, NULL, 0) == -1) {
+            eprintf("Failed to save image to %s\n", config->screenshot_dir);
+            return false;
+        }
     }
 
     if (!notify(config, fname) && config->verbose) printf("Notification was not sent\n");

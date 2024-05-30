@@ -76,10 +76,7 @@ void usage(Config *config) {
 // 1 - arguments passed correctly and immediately end the program
 // 2 - arguments passed correctly and proceed
 int parse_args(int argc, char *argv[], Config *config) {
-    if (argc < 2) {
-        usage(config);
-        return 0;
-    }
+    if (argc < 2) return 0;
 
     size_t i = 1;
     for (; i < (size_t)argc; i++) {
@@ -113,7 +110,6 @@ int parse_args(int argc, char *argv[], Config *config) {
     if (i == (size_t)argc) {
         return 2;
     } else {
-        usage(config);
         return 0;
     }
 }

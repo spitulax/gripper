@@ -37,14 +37,17 @@ int main(int argc, char *argv[]) {
     config.compositor_supported = config.compositor != COMP_NONE;
     config.screenshot_dir       = NULL;
 
+    prepare_options(&config);
     int parse_result = parse_args(argc, argv, &config);
     switch (parse_result) {
-        case 2 :  break;
-        case 1 :  return_defer(EXIT_SUCCESS);
-        case 0 :  return_defer(EXIT_FAILURE);
+        case 2 : break;
+        case 1 : return_defer(EXIT_SUCCESS);
+        case 0 : {
+            usage(&config);
+            return_defer(EXIT_FAILURE);
+        }
         default : assert(0 && "unreachable");
     }
-    prepare_options(&config);
 
     const char *home_dir = getenv("HOME");
     assert(home_dir != NULL && "HOME dir is not set");
