@@ -13,6 +13,8 @@
 
 // NOTE: replaces last character of `region` into newline
 bool cache_region(Config *config, char *region, size_t nbytes) {
+    if (config->no_cache_region) return true;
+
     bool  result            = true;
     FILE *region_cache_file = NULL;
 
@@ -174,6 +176,7 @@ bool capture(Config *config) {
         printf("Compositor              : %s\n", compositor2str(config->compositor));
         printf("Mode                    : %s\n", mode2str(config->mode));
         printf("Cursor                  : %s\n", config->cursor ? "Shown" : "Hidden");
+        printf("Clipboard               : %s\n", config->no_clipboard ? "Disabled" : "Enabled");
         print_comp_support(config->compositor_supported);
         printf("====================\n");
     }

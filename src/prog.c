@@ -27,21 +27,23 @@ void print_comp_support(bool supported) {
 }
 
 void check_requirements() {
-#define CMDS_COUNT 4
-    const char *cmds[CMDS_COUNT] = {
+    const char *cmds[] = {
         "grim",
         "slurp",
+    };
+    const char *cmds_optional[] = {
         "wl-copy",
         "notify-send",
     };
 
     printf("Check if needed commands are found:\n");
-    for (size_t i = 0; i < CMDS_COUNT; ++i) {
-        const char *msg      = command_found(cmds[i]) ? "found" : "not found";
-        bool        optional = false;
-        if (i == 3) optional = true;
-        printf(" - %s: %s%s\n", cmds[i], msg, optional ? " (optional)" : "");
-    }
+    for (size_t i = 0; i < array_len(cmds); ++i)
+        printf(" - %s: %s\n", cmds[i], command_found(cmds[i]) ? "found" : "not found");
+    printf("Optional commands:\n");
+    for (size_t i = 0; i < array_len(cmds_optional); ++i)
+        printf(" - %s: %s\n",
+               cmds_optional[i],
+               command_found(cmds_optional[i]) ? "found" : "not found");
 }
 
 void usage(Config *config) {
@@ -58,16 +60,15 @@ void usage(Config *config) {
     printf("Options:\n");
     printf("    -d <dir>            Where the screenshot is saved (defaults to environment\n");
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots)\n");
-    // TODO:
+    // TODO: add some commandline options
     // printf("    -f <path>           Where the screenshot is saved to (overrides -d)\n");
-    printf("    -c                  Include cursor in the screenshot\n");
     // printf("    -o <output>         The output name to capture\n");
-    // printf("    --no-cache-region   Used in mode region and active-window\n");
-    // printf("                        Don't cache the region that would be captured\n");
-    // printf("                        This means it will not override the region that\n");
-    // printf("                        should be used by last-region\n");
-    // printf("     --no-clipboard     Don't copy the captured image into the clipboard\n");
-    // TODO: automatically fallback to --no-clipboard if wl-copy is not found
+    printf("    -c                  Include cursor in the screenshot\n");
+    printf("    --no-cache-region   Used in mode region and active-window\n");
+    printf("                        Don't cache the region that would be captured\n");
+    printf("                        This means it will not override the region that\n");
+    printf("                        should be used by last-region\n");
+    printf("    --no-clipboard      Don't copy the captured image into the clipboard\n");
     printf("    --verbose           Print extra output\n");
 }
 
@@ -102,6 +103,10 @@ int parse_args(int argc, char *argv[], Config *config) {
         } else if (strcmp(argv[i], "-d") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->screenshot_dir = argv[++i];
+        } else if (strcmp(argv[i], "--no-cache-region") == 0) {
+            config->no_cache_region = true;
+        } else if (strcmp(argv[i], "--no-clipboard") == 0) {
+            config->no_clipboard = true;
         }
     }
 
@@ -111,4 +116,8 @@ int parse_args(int argc, char *argv[], Config *config) {
         usage(config);
         return 0;
     }
+}
+
+void prepare_options(Config *config) {
+    config->no_clipboard = !command_found("wl-copy");
 }

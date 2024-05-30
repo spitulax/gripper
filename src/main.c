@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
         case 0 :  return_defer(EXIT_FAILURE);
         default : assert(0 && "unreachable");
     }
+    prepare_options(&config);
 
     const char *home_dir = getenv("HOME");
     assert(home_dir != NULL && "HOME dir is not set");

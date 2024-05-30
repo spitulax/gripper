@@ -16,6 +16,8 @@
         fprintf(stderr, __VA_ARGS__);                                                              \
     } while (0)
 
+#define array_len(array) (sizeof(array) / sizeof(array[0]))
+
 char *malloc_strf(const char *fmt, ...);
 
 bool command_found(const char *command);

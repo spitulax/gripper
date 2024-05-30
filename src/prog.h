@@ -32,9 +32,12 @@ typedef struct {
 
     bool verbose;
     bool cursor;
+    bool no_cache_region;
+    bool no_clipboard;
 } Config;
 
 int  parse_args(int argc, char *argv[], Config *config);
+void prepare_options(Config *config);
 void print_comp_support(bool supported);
 
 #endif /* ifndef PROG_H */
