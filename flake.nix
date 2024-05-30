@@ -38,9 +38,6 @@
             inputsFrom = [
               self.packages.${system}.default
             ];
-            nativeBuildInputs = with pkgs; [
-              man-pages
-            ];
             shellHook = "exec $SHELL";
           };
         }

@@ -44,10 +44,11 @@ You can check them with the program by running `waysnip --check`.
 ## Building
 
 Waysnip is written in pure C without any external libraries.
-Simply install a C compiler such as `gcc` or `clang` and run the Makefile.
+Install a C compiler such as `gcc` or `clang` and `meson` then run these commands:
 
 ```
-$ make
+$ meson setup build
+$ meson compile -C build
 $ ./build/waysnip --help
 ```
 

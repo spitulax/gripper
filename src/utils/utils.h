@@ -4,6 +4,7 @@
 #include "../prog.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 #define return_defer(v)                                                                            \
     do {                                                                                           \

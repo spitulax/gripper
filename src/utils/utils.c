@@ -56,28 +56,23 @@ const char *compositor2str(Compositor compositor) {
 }
 
 char *get_fname(Config *config) {
-    time_t    now_time = time(NULL);
-    struct tm now;
-
-    if (localtime_r(&now_time, &now) == NULL) {
-        eprintf("get_fname: Failed to get local time\n");
-        return NULL;
-    }
+    time_t     now_time = time(NULL);
+    struct tm *now      = localtime(&now_time);
 
     char *ptr = string_alloc(&config->arena,
                              "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.png",
                              config->screenshot_dir,
-                             now.tm_year + 1900,
-                             now.tm_mon + 1,
-                             now.tm_mday,
-                             now.tm_hour,
-                             now.tm_min,
-                             now.tm_sec);
+                             now->tm_year + 1900,
+                             now->tm_mon + 1,
+                             now->tm_mday,
+                             now->tm_hour,
+                             now->tm_min,
+                             now->tm_sec);
 
     if (ptr == NULL) return NULL;
 
     return ptr;
-};
+}
 
 const char *mode2str(Mode mode) {
     return mode_name[mode];

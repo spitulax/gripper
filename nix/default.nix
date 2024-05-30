@@ -5,6 +5,9 @@
 , wl-clipboard
 , libnotify
 , makeWrapper
+, meson
+, ninja
+
 , debug ? false
 }:
 let
@@ -24,8 +27,12 @@ stdenv.mkDerivation rec {
   src = lib.cleanSource ./..;
 
   nativeBuildInputs = [
+    meson
+    ninja
     makeWrapper
   ];
+
+  mesonBuildType = if debug then "debug" else "release";
 
   postInstall = ''
     wrapProgram $out/bin/${pname} \
@@ -36,6 +43,4 @@ stdenv.mkDerivation rec {
         libnotify
       ]}
   '';
-
-  makeFlags = [ "PREFIX=$(out)" ] ++ lib.optionals (!debug) [ "RELEASE=1" ];
 }
