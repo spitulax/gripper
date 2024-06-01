@@ -1,7 +1,7 @@
 #ifndef PROG_H
 #define PROG_H
 
-#include "utils/arena.h"
+#include "memplus.h"
 #include <stdbool.h>
 
 typedef enum {
@@ -9,6 +9,7 @@ typedef enum {
     MODE_REGION,
     MODE_LAST_REGION,
     MODE_ACTIVE_WINDOW,
+    MODE_TEST,
     MODE_COUNT,
 } Mode;
 
@@ -19,7 +20,7 @@ typedef enum {
 } Compositor;
 
 typedef struct {
-    Arena arena;
+    mp_Allocator alloc;
 
     const char *prog_name;
     const char *prog_version;
@@ -38,6 +39,7 @@ typedef struct {
 
 int  parse_args(int argc, char *argv[], Config *config);
 void prepare_options(Config *config);
+// TODO: check if compositor supports needed wayland protocols
 void print_comp_support(bool supported);
 
 #endif /* ifndef PROG_H */

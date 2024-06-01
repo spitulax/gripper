@@ -7,6 +7,7 @@
 , makeWrapper
 , meson
 , ninja
+, pkg-config
 
 , debug ? false
 }:
@@ -29,6 +30,7 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     meson
     ninja
+    pkg-config
     makeWrapper
   ];
 

@@ -2,7 +2,6 @@
 #define CAPTURE_H
 
 #include "prog.h"
-#include "utils/utils.h"
 #include <stdbool.h>
 
 bool capture(Config *config);

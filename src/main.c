@@ -1,3 +1,6 @@
+#define MEMPLUS_IMPLEMENTATION
+#include "memplus.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -11,8 +14,7 @@
 
 #include "capture.h"
 #include "prog.h"
-#include "utils/arena.h"
-#include "utils/utils.h"
+#include "utils.h"
 
 #define PROG_NAME    "waysnip"
 #define PROG_VERSION "v0.1.0"
@@ -20,11 +22,12 @@
 #define DEFAULT_DIR       "Pictures/Screenshots"
 #define LAST_REGION_FNAME "waysnip-last-region"
 
-#define alloc_strf(fmt, ...) string_alloc(&config.arena, fmt, __VA_ARGS__)
+#define alloc_strf(fmt, ...) mp_string_newf(&config.alloc, fmt, __VA_ARGS__)
 
 int main(int argc, char *argv[]) {
-    int   result = EXIT_SUCCESS;
-    char *cmd    = NULL;
+    mp_Arena arena  = mp_arena_new();
+    int      result = EXIT_SUCCESS;
+    char    *cmd    = NULL;
     // variables that will be freed after defer must be initialized before any call to return_defer
     char *alt_dir               = NULL;
     char *last_region_file_path = NULL;
@@ -36,6 +39,9 @@ int main(int argc, char *argv[]) {
     config.compositor           = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
     config.compositor_supported = config.compositor != COMP_NONE;
     config.screenshot_dir       = NULL;
+
+    mp_Allocator alloc = mp_arena_new_allocator(&arena);
+    config.alloc       = alloc;
 
     prepare_options(&config);
     int parse_result = parse_args(argc, argv, &config);
@@ -56,7 +62,7 @@ int main(int argc, char *argv[]) {
     const char *screenshot_dir = getenv("SCREENSHOT_DIR");
     if (config.screenshot_dir == NULL) {
         if (screenshot_dir == NULL) {
-            alt_dir               = alloc_strf("%s/" DEFAULT_DIR, home_dir);
+            alt_dir               = alloc_strf("%s/" DEFAULT_DIR, home_dir).cstr;
             config.screenshot_dir = alt_dir;
         } else {
             config.screenshot_dir = screenshot_dir;
@@ -67,7 +73,7 @@ int main(int argc, char *argv[]) {
     {
         struct stat dir_stat;
         if (stat(config.screenshot_dir, &dir_stat)) {
-            cmd     = alloc_strf("mkdir -p %s", config.screenshot_dir);
+            cmd     = alloc_strf("mkdir -p %s", config.screenshot_dir).cstr;
             int ret = system(cmd);
             if (ret == 0) {
                 printf("Created %s\n", config.screenshot_dir);
@@ -81,14 +87,14 @@ int main(int argc, char *argv[]) {
     // Assign config.last_region_file
     cache_dir = getenv("XDG_CACHE_HOME");
     if (cache_dir == NULL) {
-        cache_dir = alloc_strf("%s/.cache", home_dir);
+        cache_dir = alloc_strf("%s/.cache", home_dir).cstr;
     }
-    last_region_file_path   = alloc_strf("%s/" LAST_REGION_FNAME, cache_dir);
+    last_region_file_path   = alloc_strf("%s/" LAST_REGION_FNAME, cache_dir).cstr;
     config.last_region_file = last_region_file_path;
 
     if (!capture(&config)) return_defer(EXIT_FAILURE);
 
 defer:
-    arena_free(&config.arena);
+    mp_arena_free(&arena);
     return result;
 }

@@ -44,7 +44,7 @@ You can check them with the program by running `waysnip --check`.
 ## Building
 
 Waysnip is written in pure C without any external libraries.
-Install a C compiler such as `gcc` or `clang` and `meson` then run these commands:
+Install `meson` then run these commands:
 
 ```
 $ meson setup build

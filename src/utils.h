@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "../prog.h"
+#include "prog.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>

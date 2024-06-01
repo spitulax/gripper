@@ -1,5 +1,5 @@
 #include "prog.h"
-#include "utils/utils.h"
+#include "utils.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -12,6 +12,8 @@ bool parse_mode_args(const char *argv, Config *config) {
         config->mode = MODE_LAST_REGION;
     } else if (strcmp(argv, "active-window") == 0) {
         config->mode = MODE_ACTIVE_WINDOW;
+    } else if (strcmp(argv, "test") == 0) {
+        config->mode = MODE_TEST;
     } else {
         return false;
     }
@@ -26,7 +28,7 @@ void print_comp_support(bool supported) {
     printf("    mode region does not have snap to window.\n");
 }
 
-void check_requirements() {
+void check_requirements(void) {
     const char *cmds[] = {
         "grim",
         "slurp",
@@ -106,6 +108,10 @@ int parse_args(int argc, char *argv[], Config *config) {
             config->no_clipboard = true;
         }
     }
+
+#ifndef DEBUG
+    if (config->mode == MODE_TEST) return 0;
+#endif
 
     if (i == (size_t)argc) {
         return 2;

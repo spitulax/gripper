@@ -1,8 +1,8 @@
 #include "capture.h"
 #include "grim.h"
+#include "memplus.h"
 #include "prog.h"
-#include "utils/arena.h"
-#include "utils/utils.h"
+#include "utils.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -46,7 +46,7 @@ bool capture_full(Config *config) {
 bool capture_region(Config *config) {
     if (config->verbose) printf("*Capturing region*\n");
 
-    char *region = arena_alloc(&config->arena, DEFAULT_OUTPUT_SIZE);
+    char *region = mp_allocator_alloc(&config->alloc, DEFAULT_OUTPUT_SIZE);
 
     if (config->verbose) {
         if (config->compositor_supported) {
@@ -102,7 +102,7 @@ bool capture_last_region(Config *config) {
 
     bool  result            = true;
     FILE *region_cache_file = NULL;
-    char *region            = arena_alloc(&config->arena, DEFAULT_OUTPUT_SIZE);
+    char *region            = mp_allocator_alloc(&config->alloc, DEFAULT_OUTPUT_SIZE);
 
     region_cache_file = fopen(config->last_region_file, "r");
     if (region_cache_file == NULL) {
@@ -141,7 +141,7 @@ bool capture_active_window(Config *config) {
 
     if (config->verbose) printf("*Capturing active window*\n");
 
-    char *region = arena_alloc(&config->arena, DEFAULT_OUTPUT_SIZE);
+    char *region = mp_allocator_alloc(&config->alloc, DEFAULT_OUTPUT_SIZE);
 
     char *cmd = NULL;
     switch (config->compositor) {
@@ -194,6 +194,10 @@ bool capture(Config *config) {
         } break;
         case MODE_ACTIVE_WINDOW : {
             return capture_active_window(config);
+        } break;
+        case MODE_TEST : {
+            eprintf("There's nothing here yet :)\n");
+            return true;
         } break;
         case MODE_COUNT : {
             assert(0 && "unreachable");

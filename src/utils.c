@@ -1,6 +1,6 @@
 #include "utils.h"
-#include "../prog.h"
-#include "arena.h"
+#include "memplus.h"
+#include "prog.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -22,6 +22,7 @@ static const char *mode_name[MODE_COUNT] = {
     [MODE_REGION]        = "Region",
     [MODE_LAST_REGION]   = "Last Region",
     [MODE_ACTIVE_WINDOW] = "Active Window",
+    [MODE_TEST]          = "Test",
 };
 
 char *malloc_strf(const char *fmt, ...) {
@@ -59,19 +60,16 @@ char *get_fname(Config *config) {
     time_t     now_time = time(NULL);
     struct tm *now      = localtime(&now_time);
 
-    char *ptr = string_alloc(&config->arena,
-                             "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.png",
-                             config->screenshot_dir,
-                             now->tm_year + 1900,
-                             now->tm_mon + 1,
-                             now->tm_mday,
-                             now->tm_hour,
-                             now->tm_min,
-                             now->tm_sec);
-
-    if (ptr == NULL) return NULL;
-
-    return ptr;
+    return mp_string_newf(&config->alloc,
+                          "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.png",
+                          config->screenshot_dir,
+                          now->tm_year + 1900,
+                          now->tm_mon + 1,
+                          now->tm_mday,
+                          now->tm_hour,
+                          now->tm_min,
+                          now->tm_sec)
+        .cstr;
 }
 
 const char *mode2str(Mode mode) {
