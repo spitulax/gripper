@@ -56,12 +56,15 @@ bool capture_region(Config *config) {
         }
     }
 
-    char *cmd = NULL;
+    mp_String cmd;
+    // TODO: costumize colors option?
+    const char *slurp_cmd = "slurp -d -b '#101020aa' -c '#cdd6f4aa' -B '#31324450'";
     switch (config->compositor) {
         case COMP_HYPRLAND : {
-            // TODO: when you switch workspace while on slurp
+            // FIXME: when you switch workspace while on slurp
             // selection still snaps onto the position of windows in initial workspace
-            cmd =
+            cmd = mp_string_newf(
+                &config->alloc,
                 // lists windows in Hyprland
                 "hyprctl clients -j | "
                 // filters window outside of the current workspace
@@ -71,17 +74,18 @@ bool capture_region(Config *config) {
                 "jq -r '.[] | \"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"' | "
                 // and those informations will be used by slurp to automatically snap selection of
                 // region to the windows
-                "slurp \"$@\"";
+                "%s",
+                slurp_cmd);
         } break;
         case COMP_NONE : {
-            cmd = "slurp";
+            cmd = mp_string_new(&config->alloc, "slurp");
         } break;
         case COMP_COUNT : {
             assert(0 && "unreachable");
         }
     }
 
-    ssize_t bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
+    ssize_t bytes = run_cmd(cmd.cstr, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
         eprintf("Selection cancelled\n");
         return false;
@@ -200,14 +204,28 @@ bool get_current_output_name(Config *config) {
 }
 
 bool capture(Config *config) {
-    if (config->output_name == NULL) {
+    if (config->output_name != NULL) {
+        // Verify if output exists
+        mp_String cmd = mp_string_newf(
+            &config->alloc, "grim -t jpeg -q 0 -o %s - >/dev/null", config->output_name);
+        if (run_cmd(cmd.cstr, NULL, 0) == -1) {
+            eprintf("Unknown output `%s`\n", config->output_name);
+            return false;
+        }
+    } else if (config->mode == MODE_FULL) {
         if (!get_current_output_name(config)) return false;
+    }
+
+    if (config->mode != MODE_FULL && config->output_name != NULL) {
+        eprintf("\033[1;33m");
+        eprintf("WARNING: Flag -o is ignored outside of mode `full`\n");
+        eprintf("\033[0m");
     }
 
     if (config->verbose) {
         printf("====================\n");
         printf("Output                  : %s\n",
-               (config->output_name == NULL) ? "All" : config->output_name);
+               (config->output_name == NULL) ? "Unspecified" : config->output_name);
         printf("Screenshot directory    : %s\n", config->screenshot_dir);
         printf("Last region cache       : %s\n", config->last_region_file);
         printf("Compositor              : %s\n", compositor2str(config->compositor));

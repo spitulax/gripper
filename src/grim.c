@@ -31,9 +31,9 @@ bool grim(Config *config, const char *region) {
     assert(fname != NULL);
 
     mp_String options = mp_string_new(&config->alloc, "");
-    // NOTE: too many allocs
+    // FIXME: too many allocs
     if (config->cursor) options = alloc_strf("%s -c", options.cstr);
-    if (config->output_name != NULL)
+    if (config->output_name != NULL && region == NULL)
         options = alloc_strf("%s -o %s", options.cstr, config->output_name);
 
     if (region == NULL) {
