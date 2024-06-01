@@ -30,15 +30,21 @@ bool grim(Config *config, const char *region) {
     char *fname = get_fname(config);
     assert(fname != NULL);
 
-    const char *options = config->cursor ? "-c" : "";
+    mp_String options = mp_string_new(&config->alloc, "");
+    // NOTE: too many allocs
+    if (config->cursor) options = alloc_strf("%s -c", options.cstr);
+    if (config->output_name != NULL)
+        options = alloc_strf("%s -o %s", options.cstr, config->output_name);
 
     if (region == NULL) {
-        cmd = alloc_strf("grim %s - > %s", options, fname).cstr;
+        cmd = alloc_strf("grim %s - > %s", options.cstr, fname).cstr;
     } else {
-        cmd = alloc_strf("grim %s -g \"%s\" - > %s", options, region, fname).cstr;
+        cmd = alloc_strf("grim %s -g \"%s\" - > %s", options.cstr, region, fname).cstr;
     }
 
+#ifdef DEBUG
     if (config->verbose) printf("$ %s\n", cmd);
+#endif
     if (run_cmd(cmd, NULL, 0) == -1) {
         eprintf("grim exited\n");
         return false;
@@ -48,7 +54,9 @@ bool grim(Config *config, const char *region) {
 
     if (!config->no_clipboard) {
         cmd = alloc_strf("wl-copy < %s", fname).cstr;
+#ifdef DEBUG
         if (config->verbose) printf("$ %s\n", cmd);
+#endif
         if (run_cmd(cmd, NULL, 0) == -1) {
             eprintf("Failed to save image to %s\n", config->screenshot_dir);
             return false;

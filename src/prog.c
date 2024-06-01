@@ -64,7 +64,7 @@ void usage(Config *config) {
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots)\n");
     // TODO: add some commandline options
     // printf("    -f <path>           Where the screenshot is saved to (overrides -d)\n");
-    // printf("    -o <output>         The output name to capture\n");
+    printf("    -o <output>         The output name to capture\n");
     printf("    -c                  Include cursor in the screenshot\n");
     printf("    --no-cache-region   Used in mode region and active-window\n");
     printf("                        Don't cache the region that would be captured\n");
@@ -102,6 +102,9 @@ int parse_args(int argc, char *argv[], Config *config) {
         } else if (strcmp(argv[i], "-d") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->screenshot_dir = argv[++i];
+        } else if (strcmp(argv[i], "-o") == 0) {
+            if (i + 1 >= (size_t)argc) break;
+            config->output_name = argv[++i];
         } else if (strcmp(argv[i], "--no-cache-region") == 0) {
             config->no_cache_region = true;
         } else if (strcmp(argv[i], "--no-clipboard") == 0) {

@@ -12,7 +12,7 @@ Mode is a common screenshotting operation that is bundled into a single subcomma
 Some modes are compositor-specific such as `active-window`, but Waysnip will run the correct command intended for each compositor respectively.
 
 These are the modes that are implemented, these can be run as `waysnip <mode>`:
-- `full`: Fullscreen (TODO: select monitor)
+- `full`: Fullscreen (focused/selected monitor).
 - `region`: Select a region using slurp. The region selection is free if you hold and drag, but if you use supported compositors it also has window snapping which highlights the window your cursor is currently in and automatically select the region the window occupies by clicking on it.
 - `active-window`: Screenshot the window currently focused (needs supported compositor).
 - `last-region`: The region selected by previous execution of `region` or `active-window` mode.
@@ -31,8 +31,6 @@ Supported compositors currently:
 ## Prerequisites
 
 Make sure the following commands are available.
-
-_NOTE: I may implement my own screenshot functionality instead of using grim._
 
 - `grim`
 - `slurp`

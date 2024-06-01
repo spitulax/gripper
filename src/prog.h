@@ -31,10 +31,11 @@ typedef struct {
     bool        compositor_supported;
     Mode        mode;
 
-    bool verbose;
-    bool cursor;
-    bool no_cache_region;
-    bool no_clipboard;
+    bool        verbose;
+    bool        cursor;
+    bool        no_cache_region;
+    bool        no_clipboard;
+    const char *output_name;
 } Config;
 
 int  parse_args(int argc, char *argv[], Config *config);

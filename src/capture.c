@@ -149,7 +149,10 @@ bool capture_active_window(Config *config) {
             cmd =
                 "hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"'";
         } break;
-        case COMP_NONE :
+        case COMP_NONE : {
+            print_comp_support(config->compositor_supported);
+            return false;
+        }
         case COMP_COUNT : {
             assert(0 && "unreachable");
         }
@@ -169,16 +172,48 @@ bool capture_active_window(Config *config) {
     return true;
 }
 
+bool get_current_output_name(Config *config) {
+    char *output_name = mp_allocator_alloc(&config->alloc, DEFAULT_OUTPUT_SIZE);
+    char *cmd         = NULL;
+    switch (config->compositor) {
+        case COMP_HYPRLAND : {
+            cmd = "hyprctl monitors -j | jq -r '.[] | select(.focused) | .name'";
+        } break;
+        case COMP_NONE : {
+            config->output_name = NULL;
+            return true;
+        } break;
+        case COMP_COUNT : {
+            assert(0 && "unreachable");
+        } break;
+    }
+
+    ssize_t bytes = run_cmd(cmd, output_name, DEFAULT_OUTPUT_SIZE);
+    if (bytes == -1 || output_name == NULL) {
+        eprintf("Failed to get information about current monitor\n");
+        return false;
+    }
+    output_name[bytes - 1] = '\0';    // trim the final newline
+    config->output_name    = output_name;
+
+    return true;
+}
+
 bool capture(Config *config) {
+    if (config->output_name == NULL) {
+        if (!get_current_output_name(config)) return false;
+    }
+
     if (config->verbose) {
         printf("====================\n");
+        printf("Output                  : %s\n",
+               (config->output_name == NULL) ? "All" : config->output_name);
         printf("Screenshot directory    : %s\n", config->screenshot_dir);
         printf("Last region cache       : %s\n", config->last_region_file);
         printf("Compositor              : %s\n", compositor2str(config->compositor));
         printf("Mode                    : %s\n", mode2str(config->mode));
         printf("Cursor                  : %s\n", config->cursor ? "Shown" : "Hidden");
         printf("Clipboard               : %s\n", config->no_clipboard ? "Disabled" : "Enabled");
-        print_comp_support(config->compositor_supported);
         printf("====================\n");
     }
 
