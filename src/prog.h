@@ -9,6 +9,7 @@ typedef enum {
     MODE_REGION,
     MODE_LAST_REGION,
     MODE_ACTIVE_WINDOW,
+    MODE_CUSTOM,
     MODE_TEST,
 } Mode;
 
@@ -32,6 +33,7 @@ typedef struct {
     const char *path;
     const char *screenshot_dir;
     const char *last_region_file;
+    const char *region;
     Compositor  compositor;
     bool        compositor_supported;
     Mode        mode;
@@ -44,6 +46,7 @@ typedef struct {
     Imgtype     imgtype;
     int         png_compression;
     int         jpeg_quality;
+    const char *output_path;
 } Config;
 
 int  parse_args(int argc, char *argv[], Config *config);

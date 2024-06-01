@@ -27,7 +27,7 @@ const char *compositor2str(Compositor compositor);
 
 const char *imgtype2str(Imgtype imgtype);
 
-char *get_fname(Config *config);
+const char *get_fname(Config *config);
 
 const char *mode2str(Mode mode);
 

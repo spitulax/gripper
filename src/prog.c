@@ -3,16 +3,21 @@
 #include <stdio.h>
 #include <string.h>
 
-bool parse_mode_args(const char *argv, Config *config) {
-    if (strcmp(argv, "full") == 0) {
+bool parse_mode_args(size_t *i, int argc, char *argv[], Config *config) {
+    const char *arg = argv[*i];
+    if (strcmp(arg, "full") == 0) {
         config->mode = MODE_FULL;
-    } else if (strcmp(argv, "region") == 0) {
+    } else if (strcmp(arg, "region") == 0) {
         config->mode = MODE_REGION;
-    } else if (strcmp(argv, "last-region") == 0) {
+    } else if (strcmp(arg, "last-region") == 0) {
         config->mode = MODE_LAST_REGION;
-    } else if (strcmp(argv, "active-window") == 0) {
+    } else if (strcmp(arg, "active-window") == 0) {
         config->mode = MODE_ACTIVE_WINDOW;
-    } else if (strcmp(argv, "test") == 0) {
+    } else if (strcmp(arg, "custom") == 0) {
+        if (*i + 1 >= (size_t)argc) return false;
+        config->mode   = MODE_CUSTOM;
+        config->region = argv[++*i];
+    } else if (strcmp(arg, "test") == 0) {
         config->mode = MODE_TEST;
     } else {
         return false;
@@ -65,14 +70,15 @@ void usage(Config *config) {
     printf("    region              Capture selected region using slurp\n");
     printf("    active-window       Capture active window\n");
     printf("    last-region         Capture last selected region\n");
+    printf("    custom <region>     Capture custom region\n");
+    printf("                        The format must be 'X,Y WxH'\n");
     printf("    --help, -h          Show this help\n");
     printf("    --version, -v       Show version\n");
     printf("    --check             Check compositor support and needed commands\n");
     printf("Options:\n");
     printf("    -d <dir>            Where the screenshot is saved (defaults to environment\n");
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots)\n");
-    // TODO: add some commandline options
-    // printf("    -f <path>           Where the screenshot is saved to (overrides -d)\n");
+    printf("    -f <path>           Where the screenshot is saved to (overrides -d)\n");
     printf("    -o <output>         The output/monitor name to capture\n");
     printf("    -c                  Include cursor in the screenshot\n");
     printf("    -t <png|ppm|jpeg>   The image type. Defaults to png\n");
@@ -108,7 +114,7 @@ int parse_args(int argc, char *argv[], Config *config) {
                 check_requirements();
                 return 1;
             }
-            if (!parse_mode_args(argv[i], config)) break;
+            if (!parse_mode_args(&i, argc, argv, config)) break;
         } else if (strcmp(argv[i], "--verbose") == 0) {
             config->verbose = true;
         } else if (strcmp(argv[i], "-c") == 0) {
@@ -150,6 +156,9 @@ int parse_args(int argc, char *argv[], Config *config) {
                 eprintf("Input a number between 0-100\n");
                 return 0;
             }
+        } else if (strcmp(argv[i], "-f") == 0) {
+            if (i + 1 >= (size_t)argc) break;
+            config->output_path = argv[++i];
         }
     }
 
@@ -165,8 +174,10 @@ int parse_args(int argc, char *argv[], Config *config) {
 }
 
 void prepare_options(Config *config) {
-    config->no_clipboard    = !command_found("wl-copy");
-    config->imgtype         = IMGTYPE_PNG;
-    config->png_compression = 6;
-    config->jpeg_quality    = 80;
+    config->compositor           = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
+    config->compositor_supported = config->compositor != COMP_NONE;
+    config->no_clipboard         = !command_found("wl-copy");
+    config->imgtype              = IMGTYPE_PNG;
+    config->png_compression      = 6;
+    config->jpeg_quality         = 80;
 }

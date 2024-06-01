@@ -22,6 +22,7 @@ static const char *mode_name[] = {
     [MODE_REGION]        = "Region",
     [MODE_LAST_REGION]   = "Last Region",
     [MODE_ACTIVE_WINDOW] = "Active Window",
+    [MODE_CUSTOM]        = "Custom",
     [MODE_TEST]          = "Test",
 };
 
@@ -66,7 +67,9 @@ const char *imgtype2str(Imgtype imgtype) {
     return imgtype_name[imgtype];
 }
 
-char *get_fname(Config *config) {
+const char *get_fname(Config *config) {
+    if (config->output_path != NULL) return config->output_path;
+
     time_t     now_time = time(NULL);
     struct tm *now      = localtime(&now_time);
 

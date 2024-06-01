@@ -16,6 +16,7 @@ These are the modes that are implemented, these can be run as `waysnip <mode>`:
 - `region`: Select a region using slurp. The region selection is free if you hold and drag, but if you use supported compositors it also has window snapping which highlights the window your cursor is currently in and automatically select the region the window occupies by clicking on it.
 - `active-window`: Screenshot the window currently focused (needs supported compositor).
 - `last-region`: The region selected by previous execution of `region` or `active-window` mode.
+- `custom`: Specify the region to capture yourself.
 
 ## Compositors
 

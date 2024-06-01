@@ -170,8 +170,19 @@ bool capture_active_window(Config *config) {
     region[bytes - 1] = '\0';    // trim the final newline
 
     if (!grim(config, region)) return false;
-
     if (!cache_region(config, region, bytes)) return false;
+
+    return true;
+}
+
+bool capture_custom(Config *config) {
+    if (config->verbose) printf("*Capturing custom region*\n");
+
+    if (!grim(config, config->region)) return false;
+    if (!cache_region(config,
+                      mp_string_newf(&config->alloc, "%s\0", config->region).cstr,
+                      strlen(config->region) + 1))
+        return false;
 
     return true;
 }
@@ -216,6 +227,16 @@ bool capture(Config *config) {
         if (!get_current_output_name(config)) return false;
     }
 
+    // Verify geometry
+    if (config->region != NULL) {
+        mp_String cmd = mp_string_newf(
+            &config->alloc, "grim -t jpeg -q 0 -g '%s' - >/dev/null", config->region);
+        if (run_cmd(cmd.cstr, NULL, 0) == -1) {
+            eprintf("Invalid region format `%s`\n", config->region);
+            return false;
+        }
+    }
+
     if (config->mode != MODE_FULL && config->output_name != NULL) {
         eprintf("\033[1;33m");
         eprintf("WARNING: Flag -o is ignored outside of mode `full`\n");
@@ -226,6 +247,9 @@ bool capture(Config *config) {
         printf("====================\n");
         printf("Output                  : %s\n",
                (config->output_name == NULL) ? "Unspecified" : config->output_name);
+        if (config->mode == MODE_CUSTOM) {
+            printf("Region                  : %s\n", config->region);
+        }
         printf("Screenshot directory    : %s\n", config->screenshot_dir);
         printf("Last region cache       : %s\n", config->last_region_file);
         printf("Compositor              : %s\n", compositor2str(config->compositor));
@@ -257,6 +281,9 @@ bool capture(Config *config) {
         } break;
         case MODE_ACTIVE_WINDOW : {
             return capture_active_window(config);
+        } break;
+        case MODE_CUSTOM : {
+            return capture_custom(config);
         } break;
         case MODE_TEST : {
             eprintf("There's nothing here yet :)\n");

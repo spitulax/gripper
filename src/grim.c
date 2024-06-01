@@ -27,8 +27,8 @@ bool notify(Config *config, const char *fname) {
 }
 
 bool grim(Config *config, const char *region) {
-    char *cmd   = NULL;
-    char *fname = get_fname(config);
+    char       *cmd   = NULL;
+    const char *fname = get_fname(config);
     assert(fname != NULL);
 
     mp_String options = mp_string_newf(&config->alloc, "-t %s", imgtype2str(config->imgtype));

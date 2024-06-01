@@ -33,12 +33,9 @@ int main(int argc, char *argv[]) {
     char *last_region_file_path = NULL;
     char *cache_dir             = NULL;
 
-    static Config config;
-    config.prog_name            = PROG_NAME;
-    config.prog_version         = PROG_VERSION;
-    config.compositor           = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
-    config.compositor_supported = config.compositor != COMP_NONE;
-    config.screenshot_dir       = NULL;
+    static Config config = { 0 };
+    config.prog_name     = PROG_NAME;
+    config.prog_version  = PROG_VERSION;
 
     mp_Allocator alloc = mp_arena_new_allocator(&arena);
     config.alloc       = alloc;
