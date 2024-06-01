@@ -232,6 +232,16 @@ bool capture(Config *config) {
         printf("Mode                    : %s\n", mode2str(config->mode));
         printf("Cursor                  : %s\n", config->cursor ? "Shown" : "Hidden");
         printf("Clipboard               : %s\n", config->no_clipboard ? "Disabled" : "Enabled");
+        printf("Image type              : %s\n", imgtype2str(config->imgtype));
+        switch (config->imgtype) {
+            case IMGTYPE_PNG : {
+                printf("PNG compression level   : %d\n", config->png_compression);
+            } break;
+            case IMGTYPE_JPEG : {
+                printf("JPEG quality:           : %d\n", config->jpeg_quality);
+            } break;
+            case IMGTYPE_PPM : break;
+        }
         printf("====================\n");
     }
 
@@ -252,9 +262,6 @@ bool capture(Config *config) {
             eprintf("There's nothing here yet :)\n");
             return true;
         } break;
-        case MODE_COUNT : {
-            assert(0 && "unreachable");
-        }
     }
 
     assert(0 && "unreachable");

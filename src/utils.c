@@ -12,17 +12,23 @@
 #include <time.h>
 #include <unistd.h>
 
-static const char *compositor_name[COMP_COUNT] = {
+static const char *compositor_name[] = {
     [COMP_NONE]     = "Not supported",
     [COMP_HYPRLAND] = "Hyprland",
 };
 
-static const char *mode_name[MODE_COUNT] = {
+static const char *mode_name[] = {
     [MODE_FULL]          = "Full",
     [MODE_REGION]        = "Region",
     [MODE_LAST_REGION]   = "Last Region",
     [MODE_ACTIVE_WINDOW] = "Active Window",
     [MODE_TEST]          = "Test",
+};
+
+static const char *imgtype_name[] = {
+    [IMGTYPE_PNG]  = "png",
+    [IMGTYPE_PPM]  = "ppm",
+    [IMGTYPE_JPEG] = "jpeg",
 };
 
 char *malloc_strf(const char *fmt, ...) {
@@ -56,19 +62,38 @@ const char *compositor2str(Compositor compositor) {
     return compositor_name[compositor];
 }
 
+const char *imgtype2str(Imgtype imgtype) {
+    return imgtype_name[imgtype];
+}
+
 char *get_fname(Config *config) {
     time_t     now_time = time(NULL);
     struct tm *now      = localtime(&now_time);
 
+    char *ext = NULL;
+    switch (config->imgtype) {
+        case IMGTYPE_PNG : {
+            ext = "png";
+        } break;
+        case IMGTYPE_JPEG : {
+            ext = "jpg";
+        } break;
+        case IMGTYPE_PPM : {
+            ext = "ppm";
+        } break;
+    }
+    if (ext == NULL) assert(0 && "unreachable");
+
     return mp_string_newf(&config->alloc,
-                          "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.png",
+                          "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.%s",
                           config->screenshot_dir,
                           now->tm_year + 1900,
                           now->tm_mon + 1,
                           now->tm_mday,
                           now->tm_hour,
                           now->tm_min,
-                          now->tm_sec)
+                          now->tm_sec,
+                          ext)
         .cstr;
 }
 

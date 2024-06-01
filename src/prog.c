@@ -48,6 +48,15 @@ void check_requirements(void) {
                command_found(cmds_optional[i]) ? "found" : "not found");
 }
 
+int atoui(const char *str) {
+    if (str[0] == 48 && str[1] == '\0') return 0;
+    int result = atoi(str);
+    if (result == 0)
+        return -1;
+    else
+        return result;
+}
+
 void usage(Config *config) {
     printf("Usage: %s <mode> [options]\n", config->prog_name);
     printf("\n");
@@ -64,8 +73,13 @@ void usage(Config *config) {
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots)\n");
     // TODO: add some commandline options
     // printf("    -f <path>           Where the screenshot is saved to (overrides -d)\n");
-    printf("    -o <output>         The output name to capture\n");
+    printf("    -o <output>         The output/monitor name to capture\n");
     printf("    -c                  Include cursor in the screenshot\n");
+    printf("    -t <png|ppm|jpeg>   The image type. Defaults to png\n");
+    printf("    --png-level         PNG compression level from 0 to 9\n");
+    printf("                        Defaults to 6 (for -t png, ignored elsewhere)\n");
+    printf("    --jpeg-quality      JPEG quality from 0 to 100\n");
+    printf("                        Defaults to 80 (for -t jpeg, ignored elsewhere)\n");
     printf("    --no-cache-region   Used in mode region and active-window\n");
     printf("                        Don't cache the region that would be captured\n");
     printf("                        This means it will not override the region that\n");
@@ -109,6 +123,33 @@ int parse_args(int argc, char *argv[], Config *config) {
             config->no_cache_region = true;
         } else if (strcmp(argv[i], "--no-clipboard") == 0) {
             config->no_clipboard = true;
+        } else if (strcmp(argv[i], "-t") == 0) {
+            if (i + 1 >= (size_t)argc) break;
+            const char *type = argv[++i];
+            if (strcmp(type, "png") == 0) {
+                config->imgtype = IMGTYPE_PNG;
+            } else if (strcmp(type, "ppm") == 0) {
+                config->imgtype = IMGTYPE_PPM;
+            } else if (strcmp(type, "jpeg") == 0) {
+                config->imgtype = IMGTYPE_JPEG;
+            } else {
+                eprintf("Invalid file type `%s`\n", type);
+                return 0;
+            }
+        } else if (strcmp(argv[i], "--png-level") == 0) {
+            if (i + 1 >= (size_t)argc) break;
+            config->png_compression = atoui(argv[++i]);
+            if (config->png_compression < 0 || config->png_compression > 9) {
+                eprintf("Input a number between 0-9\n");
+                return 0;
+            }
+        } else if (strcmp(argv[i], "--jpeg-quality") == 0) {
+            if (i + 1 >= (size_t)argc) break;
+            config->jpeg_quality = atoui(argv[++i]);
+            if (config->jpeg_quality < 0 || config->jpeg_quality > 100) {
+                eprintf("Input a number between 0-100\n");
+                return 0;
+            }
         }
     }
 
@@ -124,5 +165,8 @@ int parse_args(int argc, char *argv[], Config *config) {
 }
 
 void prepare_options(Config *config) {
-    config->no_clipboard = !command_found("wl-copy");
+    config->no_clipboard    = !command_found("wl-copy");
+    config->imgtype         = IMGTYPE_PNG;
+    config->png_compression = 6;
+    config->jpeg_quality    = 80;
 }

@@ -10,7 +10,6 @@ typedef enum {
     MODE_LAST_REGION,
     MODE_ACTIVE_WINDOW,
     MODE_TEST,
-    MODE_COUNT,
 } Mode;
 
 typedef enum {
@@ -18,6 +17,12 @@ typedef enum {
     COMP_HYPRLAND,
     COMP_COUNT,
 } Compositor;
+
+typedef enum {
+    IMGTYPE_PNG,
+    IMGTYPE_PPM,
+    IMGTYPE_JPEG,
+} Imgtype;
 
 typedef struct {
     mp_Allocator alloc;
@@ -36,6 +41,9 @@ typedef struct {
     bool        no_cache_region;
     bool        no_clipboard;
     const char *output_name;
+    Imgtype     imgtype;
+    int         png_compression;
+    int         jpeg_quality;
 } Config;
 
 int  parse_args(int argc, char *argv[], Config *config);
