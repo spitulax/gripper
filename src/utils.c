@@ -174,3 +174,13 @@ Compositor str2compositor(const char *str) {
     }
     return COMP_NONE;
 }
+
+bool verify_geometry(const char *geometry) {
+    char cmd[100];
+    snprintf(cmd, 100, "grim -t jpeg -q 0 -g '%s' - >/dev/null", geometry);
+    if (run_cmd(cmd, NULL, 0) == -1) {
+        eprintf("Invalid region format `%s`\n", geometry);
+        return false;
+    }
+    return true;
+}

@@ -41,4 +41,6 @@ Compositor str2compositor(const char *str);
 
 void usage(Config *config);
 
+bool verify_geometry(const char *geometry);
+
 #endif /* ifndef UTILS_H */

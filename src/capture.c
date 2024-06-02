@@ -127,7 +127,7 @@ bool capture_last_region(Config *config) {
     }
     region[bytes - 1] = '\0';    // trim the final newline
 
-    // TODO: check if the region format is correct
+    if (!verify_geometry(region)) return false;
 
     if (config->verbose) printf("Selected region: %s\n", region);
     if (!grim(config, region)) return_defer(false);
@@ -227,19 +227,12 @@ bool capture(Config *config) {
         if (!get_current_output_name(config)) return false;
     }
 
-    // Verify geometry
-    if (config->region != NULL) {
-        mp_String cmd = mp_string_newf(
-            &config->alloc, "grim -t jpeg -q 0 -g '%s' - >/dev/null", config->region);
-        if (run_cmd(cmd.cstr, NULL, 0) == -1) {
-            eprintf("Invalid region format `%s`\n", config->region);
-            return false;
-        }
-    }
+    if (config->region != NULL)
+        if (!verify_geometry(config->region)) return false;
 
     if (config->mode != MODE_FULL && config->output_name != NULL) {
         eprintf("\033[1;33m");
-        eprintf("WARNING: Flag -o is ignored outside of mode `full`\n");
+        eprintf("Warning: Flag -o is ignored outside of mode `full`\n");
         eprintf("\033[0m");
     }
 
