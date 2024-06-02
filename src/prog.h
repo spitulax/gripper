@@ -58,6 +58,7 @@ typedef struct {
     int         png_level;
     int         jpeg_quality;
     const char *output_path;
+    bool        all_outputs;
 } Config;
 
 int  parse_args(int argc, char *argv[], Config *config);

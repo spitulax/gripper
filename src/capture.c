@@ -1,5 +1,6 @@
 #include "capture.h"
 #include "grim.h"
+#include "hyprland.h"
 #include "memplus.h"
 #include "prog.h"
 #include "unistd.h"
@@ -61,22 +62,11 @@ bool capture_region(Config *config) {
     // TODO: costumize colors option?
     const char *slurp_cmd = "slurp -d -b '#101020aa' -c '#cdd6f4aa' -B '#31324450'";
     switch (config->compositor) {
+        // FIXME: when you switch workspace while on slurp
+        // selection still snaps onto the position of windows in initial workspace
         case COMP_HYPRLAND : {
-            // FIXME: when you switch workspace while on slurp
-            // selection still snaps onto the position of windows in initial workspace
             cmd = mp_string_newf(
-                &config->alloc,
-                // lists windows in Hyprland
-                "hyprctl clients -j | "
-                // filters window outside of the current workspace
-                "jq -r --argjson workspaces \"$(hyprctl monitors -j | jq -r 'map(.activeWorkspace.id)')\" "
-                "'map(select([.workspace.id] | inside($workspaces)))' | "
-                // get the position and size of each window and turn it into format slurp can read
-                "jq -r '.[] | \"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"' | "
-                // and those informations will be used by slurp to automatically snap selection of
-                // region to the windows
-                "%s",
-                slurp_cmd);
+                &config->alloc, "%s | %s", hyprland_get_windows(&config->alloc).cstr, slurp_cmd);
         } break;
         case COMP_NONE : {
             cmd = mp_string_new(&config->alloc, "slurp");
@@ -151,8 +141,7 @@ bool capture_active_window(Config *config) {
     char *cmd = NULL;
     switch (config->compositor) {
         case COMP_HYPRLAND : {
-            cmd =
-                "hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"'";
+            cmd = hyprland_get_active_window(&config->alloc).cstr;
         } break;
         case COMP_NONE : {
             print_comp_support(config->compositor_supported);
@@ -193,7 +182,7 @@ bool get_current_output_name(Config *config) {
     char *cmd         = NULL;
     switch (config->compositor) {
         case COMP_HYPRLAND : {
-            cmd = "hyprctl monitors -j | jq -r '.[] | select(.focused) | .name'";
+            cmd = hyprland_get_active_monitor(&config->alloc).cstr;
         } break;
         case COMP_NONE : {
             config->output_name = NULL;
@@ -224,23 +213,25 @@ bool capture(Config *config) {
             eprintf("Unknown output `%s`\n", config->output_name);
             return false;
         }
-    } else if (config->mode == MODE_FULL) {
+    } else if (config->mode == MODE_FULL && !config->all_outputs) {
         if (!get_current_output_name(config)) return false;
     }
 
     if (config->region != NULL)
         if (!verify_geometry(config->region)) return false;
 
-    if (config->mode != MODE_FULL && config->output_name != NULL) {
+    if (config->mode != MODE_FULL && (config->output_name != NULL || config->all_outputs)) {
         eprintf("\033[1;33m");
-        eprintf("Warning: Flag -o is ignored outside of mode `full`\n");
+        eprintf("Warning: Flag -o and --all is ignored outside of mode `full`\n");
         eprintf("\033[0m");
     }
 
     if (config->verbose) {
         printf("====================\n");
-        printf("Output                  : %s\n",
-               (config->output_name == NULL) ? "Unspecified" : config->output_name);
+        if (config->mode == MODE_FULL) {
+            printf("Output                  : %s\n",
+                   (config->output_name == NULL) ? "All" : config->output_name);
+        }
         if (config->mode == MODE_CUSTOM) {
             printf("Region                  : %s\n", config->region);
         }

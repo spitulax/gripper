@@ -84,6 +84,9 @@ void usage(Config *config) {
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots).\n");
     printf("    -f <path>           Where the screenshot is saved to (overrides -d).\n");
     printf("    -o <output>         The output/monitor name to capture.\n");
+    printf("                        Ignored outside of mode `full`.\n");
+    printf("    --all               Capture all outputs.\n");
+    printf("                        Ignored outside of mode `full`.\n");
     printf("    -w <sec>            Wait for given seconds before capturing.\n");
     printf("    -s <factor>         Scale the final image.\n");
     printf("    -c                  Include cursor in the screenshot.\n");
@@ -107,7 +110,7 @@ int parse_args(int argc, char *argv[], Config *config) {
     if (argc < 2) return 0;
 
     size_t i = 1;
-    for (; i < (size_t)argc; i++) {
+    for (; i < (size_t)argc; ++i) {
         if (i == 1) {
             if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
                 usage(config);
@@ -131,6 +134,10 @@ int parse_args(int argc, char *argv[], Config *config) {
         } else if (strcmp(argv[i], "-o") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->output_name = argv[++i];
+            config->all_outputs = false;
+        } else if (strcmp(argv[i], "--all") == 0) {
+            config->output_name = NULL;
+            config->all_outputs = true;
         } else if (strcmp(argv[i], "--no-save-region") == 0) {
             config->no_cache_region = true;
         } else if (strcmp(argv[i], "--save") == 0) {
@@ -186,6 +193,8 @@ int parse_args(int argc, char *argv[], Config *config) {
                 eprintf("Input a positive number\n");
                 return 0;
             }
+        } else {
+            return 0;
         }
     }
 
