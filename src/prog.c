@@ -1,5 +1,6 @@
 #include "prog.h"
 #include "utils.h"
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -81,6 +82,8 @@ void usage(Config *config) {
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots).\n");
     printf("    -f <path>           Where the screenshot is saved to (overrides -d).\n");
     printf("    -o <output>         The output/monitor name to capture.\n");
+    printf("    -w <sec>            Wait for given seconds before capturing.\n");
+    printf("    -s <factor>         Scale the final image.\n");
     printf("    -c                  Include cursor in the screenshot.\n");
     printf("    -t <png|ppm|jpeg>   The image type. Defaults to png.\n");
     printf("    --png-level         PNG compression level from 0 to 9.\n");
@@ -145,8 +148,8 @@ int parse_args(int argc, char *argv[], Config *config) {
             }
         } else if (strcmp(argv[i], "--png-level") == 0) {
             if (i + 1 >= (size_t)argc) break;
-            config->png_compression = atoui(argv[++i]);
-            if (config->png_compression < 0 || config->png_compression > 9) {
+            config->png_level = atoui(argv[++i]);
+            if (config->png_level < 0 || config->png_level > 9) {
                 eprintf("Input a number between 0-9\n");
                 return 0;
             }
@@ -160,6 +163,23 @@ int parse_args(int argc, char *argv[], Config *config) {
         } else if (strcmp(argv[i], "-f") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->output_path = argv[++i];
+        } else if (strcmp(argv[i], "-s") == 0) {
+            if (i + 1 >= (size_t)argc) break;
+            config->scale = strtod(argv[++i], NULL);
+            if (config->scale <= 0) {
+                eprintf("Input a number greater than 0\n");
+                return 0;
+            } else if (config->scale == HUGE_VAL) {
+                eprintf("Input number overflew\n");
+                return 0;
+            }
+        } else if (strcmp(argv[i], "-w") == 0) {
+            if (i + 1 >= (size_t)argc) break;
+            config->wait_time = atoui(argv[++i]);
+            if (config->wait_time < 0) {
+                eprintf("Input a positive number\n");
+                return 0;
+            }
         }
     }
 
@@ -179,6 +199,8 @@ void prepare_options(Config *config) {
     config->compositor_supported = config->compositor != COMP_NONE;
     config->no_clipboard         = !command_found("wl-copy");
     config->imgtype              = IMGTYPE_PNG;
-    config->png_compression      = 6;
-    config->jpeg_quality         = 80;
+    config->png_level            = DEFAULT_PNG_LEVEL;
+    config->jpeg_quality         = DEFAULT_JPEG_QUALITY;
+    config->scale                = 1.0;
+    config->wait_time            = 0;
 }

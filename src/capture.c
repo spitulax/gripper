@@ -2,6 +2,7 @@
 #include "grim.h"
 #include "memplus.h"
 #include "prog.h"
+#include "unistd.h"
 #include "utils.h"
 #include <assert.h>
 #include <errno.h>
@@ -249,10 +250,11 @@ bool capture(Config *config) {
         printf("Mode                    : %s\n", mode2str(config->mode));
         printf("Cursor                  : %s\n", config->cursor ? "Shown" : "Hidden");
         printf("Clipboard               : %s\n", config->no_clipboard ? "Disabled" : "Enabled");
+        printf("Scale                   : %.1f\n", config->scale);
         printf("Image type              : %s\n", imgtype2str(config->imgtype));
         switch (config->imgtype) {
             case IMGTYPE_PNG : {
-                printf("PNG compression level   : %d\n", config->png_compression);
+                printf("PNG compression level   : %d\n", config->png_level);
             } break;
             case IMGTYPE_JPEG : {
                 printf("JPEG quality:           : %d\n", config->jpeg_quality);
@@ -260,6 +262,11 @@ bool capture(Config *config) {
             case IMGTYPE_PPM : break;
         }
         printf("====================\n");
+    }
+
+    if (config->wait_time > 0) {
+        if (config->verbose) printf("*Waiting for %d seconds...*\n", config->wait_time);
+        sleep(config->wait_time);
     }
 
     switch (config->mode) {

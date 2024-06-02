@@ -31,16 +31,20 @@ bool grim(Config *config, const char *region) {
     const char *fname = get_fname(config);
     assert(fname != NULL);
 
-    mp_String options = mp_string_newf(&config->alloc, "-t %s", imgtype2str(config->imgtype));
+    mp_String options =
+        mp_string_newf(&config->alloc, "-t %s", config->scale, imgtype2str(config->imgtype));
     // NOTE: too many allocs, but it may be just fine
-    switch (config->imgtype) {
-        case IMGTYPE_PNG : {
-            options = alloc_strf("%s -l %d", options.cstr, config->png_compression);
-        } break;
-        case IMGTYPE_JPEG : {
-            options = alloc_strf("%s -q %d", options.cstr, config->jpeg_quality);
-        } break;
-        case IMGTYPE_PPM : break;
+    if (config->scale != 1.0) options = alloc_strf("%s -s %f", options.cstr, config->scale);
+    if (config->jpeg_quality != DEFAULT_JPEG_QUALITY || config->png_level != DEFAULT_PNG_LEVEL) {
+        switch (config->imgtype) {
+            case IMGTYPE_PNG : {
+                options = alloc_strf("%s -l %d", options.cstr, config->png_level);
+            } break;
+            case IMGTYPE_JPEG : {
+                options = alloc_strf("%s -q %d", options.cstr, config->jpeg_quality);
+            } break;
+            case IMGTYPE_PPM : break;
+        }
     }
     if (config->cursor) options = alloc_strf("%s -c", options.cstr);
     if (config->output_name != NULL && region == NULL)

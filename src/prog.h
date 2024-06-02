@@ -4,6 +4,9 @@
 #include "memplus.h"
 #include <stdbool.h>
 
+#define DEFAULT_PNG_LEVEL    6
+#define DEFAULT_JPEG_QUALITY 80
+
 typedef enum {
     MODE_FULL,
     MODE_REGION,
@@ -42,9 +45,11 @@ typedef struct {
     bool        cursor;
     bool        no_cache_region;
     bool        no_clipboard;
+    double      scale;
+    int32_t     wait_time;
     const char *output_name;
     Imgtype     imgtype;
-    int         png_compression;
+    int         png_level;
     int         jpeg_quality;
     const char *output_path;
 } Config;
