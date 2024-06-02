@@ -59,7 +59,7 @@ bool capture_region(Config *config) {
         }
     }
 
-    mp_String cmd;
+    mp_String cmd = { 0 };
     // TODO: costumize colors option?
     const char *slurp_cmd = "slurp -d -b '#101020aa' -c '#cdd6f4aa' -B '#31324450'";
     switch (config->compositor) {
