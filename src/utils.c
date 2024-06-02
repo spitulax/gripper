@@ -81,19 +81,7 @@ const char *get_fname(Config *config) {
     time_t     now_time = time(NULL);
     struct tm *now      = localtime(&now_time);
 
-    char *ext = NULL;
-    switch (config->imgtype) {
-        case IMGTYPE_PNG : {
-            ext = "png";
-        } break;
-        case IMGTYPE_JPEG : {
-            ext = "jpg";
-        } break;
-        case IMGTYPE_PPM : {
-            ext = "ppm";
-        } break;
-    }
-    if (ext == NULL) assert(0 && "unreachable");
+    const char *ext = imgtype2str(config->imgtype);
 
     return mp_string_newf(&config->alloc,
                           "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.%s",

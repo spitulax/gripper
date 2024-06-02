@@ -30,8 +30,11 @@ bool parse_mode_args(size_t *i, int argc, char *argv[], Config *config) {
 void print_comp_support(bool supported) {
     printf("Your compositor is ");
     printf(supported ? "supported.\n" : "not supported.\n");
-    printf("    Mode active-window is unavailable for unsupported compositor and\n");
-    printf("    mode region does not have snap to window.\n");
+    printf("    Mode `active-window` is unavailable for unsupported compositor and\n");
+    printf("    mode `region` does not have snap to window.\n");
+    printf("    Mode `full` is also unable to pick current output automatically.\n");
+    printf("    You must specify it yourself with `-o` or it will capture all outputs\n");
+    printf("    which is the behaviour of `--all`.\n");
 }
 
 void check_requirements(void) {
