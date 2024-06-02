@@ -1,5 +1,5 @@
 project(
-  'waysnip',
+  'gripper',
   'c',
   version : '0.1.0',
   license: 'MIT',
@@ -17,7 +17,7 @@ endif
 subdir('src')
 
 executable(
-  'waysnip',
+  'gripper',
   src,
   include_directories : 'src',
   install : true)

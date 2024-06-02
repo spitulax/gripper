@@ -16,11 +16,11 @@
 #include "prog.h"
 #include "utils.h"
 
-#define PROG_NAME    "waysnip"
+#define PROG_NAME    "gripper"
 #define PROG_VERSION "v0.1.0"
 
 #define DEFAULT_DIR       "Pictures/Screenshots"
-#define LAST_REGION_FNAME "waysnip-last-region"
+#define LAST_REGION_FNAME "gripper-last-region"
 
 #define alloc_strf(fmt, ...) mp_string_newf(&config.alloc, fmt, __VA_ARGS__)
 

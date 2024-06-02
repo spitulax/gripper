@@ -52,7 +52,7 @@ char *malloc_strf(const char *fmt, ...) {
 }
 
 bool command_found(const char *command) {
-    char *cmd = malloc_strf("which %s >/dev/null 2>&1", command);
+    char *cmd = malloc_strf("command -v '%s' >/dev/null 2>&1", command);
     assert(cmd != NULL);
     int ret = system(cmd);
     free(cmd);
@@ -176,11 +176,12 @@ Compositor str2compositor(const char *str) {
 }
 
 bool verify_geometry(const char *geometry) {
-    char cmd[100];
-    snprintf(cmd, 100, "grim -t jpeg -q 0 -g '%s' - >/dev/null", geometry);
+    char *cmd = malloc_strf("grim -t jpeg -q 0 -g '%s' - >/dev/null", geometry);
     if (run_cmd(cmd, NULL, 0) == -1) {
         eprintf("Invalid region format `%s`\n", geometry);
+        free(cmd);
         return false;
     }
+    free(cmd);
     return true;
 }

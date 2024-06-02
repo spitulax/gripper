@@ -23,7 +23,7 @@ let
     ]) 1);
 in
 stdenv.mkDerivation rec {
-  pname = "waysnip";
+  pname = "gripper";
   inherit version;
   src = lib.cleanSource ./..;
 

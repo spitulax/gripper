@@ -24,8 +24,8 @@
           pkgs = pkgsFor.${system};
         in
         {
-          default = self.packages.${system}.waysnip;
-          inherit (pkgs) waysnip waysnip-debug;
+          default = self.packages.${system}.gripper;
+          inherit (pkgs) gripper gripper-debug;
         });
 
       devShells = eachSystem (system:

@@ -12,8 +12,8 @@ bool notify(Config *config, const char *fname) {
     if (!command_found("notify-send")) return false;
 
     // TODO: maybe print the region?
-    // TODO: add actions to the notification that maybe brings an option to view the image
-    char *cmd = alloc_strf("notify-send -a Waysnip 'Screenshot taken (%s)' 'Saved to %s'",
+    // TODO: add actions to the notification that maybe brings an option to view/edit the image
+    char *cmd = alloc_strf("notify-send -t 3000 -a Gripper 'Screenshot taken (%s)' 'Saved to %s'",
                            mode2str(config->mode),
                            fname)
                     .cstr;
@@ -56,11 +56,11 @@ bool grim(Config *config, const char *region) {
     if (config->verbose) printf("$ %s\n", cmd);
 #endif
     if (run_cmd(cmd, NULL, 0) == -1) {
-        eprintf("grim exited\n");
+        eprintf("Failed to run grim\n");
         return false;
     }
 
-    if (!notify(config, fname) && config->verbose) printf("Notification was not sent\n");
+    notify(config, fname);
 
     if (!config->no_clipboard) {
         cmd = alloc_strf("wl-copy < %s", fname).cstr;

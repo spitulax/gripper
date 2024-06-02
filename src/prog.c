@@ -37,6 +37,7 @@ void check_requirements(void) {
     const char *cmds[] = {
         "grim",
         "slurp",
+        "jq",
     };
     const char *cmds_optional[] = {
         "wl-copy",
