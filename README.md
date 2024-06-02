@@ -2,7 +2,7 @@
 
 <h4 align="center">Simple and easy to use screenshot utility for Wayland for just works out-of-the box experience</h4>
 
-Gripper is an alternative to [grimblast](https://github.com/hyprwm/contrib/blob/main/grimblast) and [grimshot](https://github.com/OctopusET/sway-contrib/blob/master/grimshot).
+Gripper is an alternative to [grimblast](https://github.com/hyprwm/contrib/blob/main/grimblast) and [grimshot](https://github.com/OctopusET/sway-contrib/blob/master/grimshot) that works for both compositors.
 Gripper runs [grim](https://sr.ht/~emersion/grim/) under the hood, but makes it easier to use
 by providing "alias" of common operations in grim that are often compositor-specific.
 Also copies screenshot to clipboard and sends notification on completion.
@@ -27,8 +27,9 @@ Some modes such as `active-window` requires it to be implemented for specific co
 
 Supported compositor means that some compositor-specific operations are implemented for that compositor.
 
-Supported compositors currently:
+Supported compositors for now:
 - Hyprland
+- Sway
 
 ## Prerequisites
 

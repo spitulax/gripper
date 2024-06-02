@@ -19,6 +19,7 @@ typedef enum {
 typedef enum {
     COMP_NONE,
     COMP_HYPRLAND,
+    COMP_SWAY,
     COMP_COUNT,
 } Compositor;
 

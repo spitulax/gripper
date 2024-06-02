@@ -4,5 +4,6 @@ src = files(
   './hyprland.c',
   './main.c',
   './prog.c',
+  './sway.c',
   './utils.c',
 )

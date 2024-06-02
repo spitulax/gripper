@@ -60,7 +60,7 @@ bool grim(Config *config, const char *region) {
     if (config->cursor) options = alloc_strf("%s -c", options.cstr);
     if (config->output_name != NULL && region == NULL)
         options = alloc_strf("%s -o %s", options.cstr, config->output_name);
-    if (config->region != NULL) options = alloc_strf("%s -g \"%s\"", options.cstr, region);
+    if (region != NULL) options = alloc_strf("%s -g \"%s\"", options.cstr, region);
 
     if (config->save_mode & SAVEMODE_DISK) {
         cmd = alloc_strf("grim %s - > %s", options.cstr, fname).cstr;

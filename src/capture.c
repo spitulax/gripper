@@ -3,6 +3,7 @@
 #include "hyprland.h"
 #include "memplus.h"
 #include "prog.h"
+#include "sway.h"
 #include "unistd.h"
 #include "utils.h"
 #include <assert.h>
@@ -65,8 +66,10 @@ bool capture_region(Config *config) {
         // FIXME: when you switch workspace while on slurp
         // selection still snaps onto the position of windows in initial workspace
         case COMP_HYPRLAND : {
-            cmd = mp_string_newf(
-                &config->alloc, "%s | %s", hyprland_get_windows(&config->alloc).cstr, slurp_cmd);
+            cmd = hyprland_get_windows(&config->alloc);
+        } break;
+        case COMP_SWAY : {
+            cmd = sway_get_windows(&config->alloc);
         } break;
         case COMP_NONE : {
             cmd = mp_string_new(&config->alloc, "slurp");
@@ -75,6 +78,8 @@ bool capture_region(Config *config) {
             assert(0 && "unreachable");
         }
     }
+
+    cmd = mp_string_newf(&config->alloc, "%s | %s", cmd.cstr, slurp_cmd);
 
     ssize_t bytes = run_cmd(cmd.cstr, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
@@ -143,6 +148,9 @@ bool capture_active_window(Config *config) {
         case COMP_HYPRLAND : {
             cmd = hyprland_get_active_window(&config->alloc).cstr;
         } break;
+        case COMP_SWAY : {
+            cmd = sway_get_active_window(&config->alloc).cstr;
+        } break;
         case COMP_NONE : {
             print_comp_support(config->compositor_supported);
             return false;
@@ -183,6 +191,9 @@ bool get_current_output_name(Config *config) {
     switch (config->compositor) {
         case COMP_HYPRLAND : {
             cmd = hyprland_get_active_monitor(&config->alloc).cstr;
+        } break;
+        case COMP_SWAY : {
+            cmd = sway_get_active_monitor(&config->alloc).cstr;
         } break;
         case COMP_NONE : {
             config->output_name = NULL;

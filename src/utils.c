@@ -15,6 +15,7 @@
 static const char *compositor_name[] = {
     [COMP_NONE]     = "Not supported",
     [COMP_HYPRLAND] = "Hyprland",
+    [COMP_SWAY]     = "sway",
 };
 
 static const char *mode_name[] = {
