@@ -28,6 +28,12 @@ typedef enum {
     IMGTYPE_JPEG,
 } Imgtype;
 
+typedef enum {
+    SAVEMODE_NONE      = 0,
+    SAVEMODE_DISK      = 1 << 0,
+    SAVEMODE_CLIPBOARD = 1 << 1,
+} SaveMode;
+
 typedef struct {
     mp_Allocator alloc;
 
@@ -40,11 +46,11 @@ typedef struct {
     Compositor  compositor;
     bool        compositor_supported;
     Mode        mode;
+    SaveMode    save_mode;
 
     bool        verbose;
     bool        cursor;
     bool        no_cache_region;
-    bool        no_clipboard;
     double      scale;
     int32_t     wait_time;
     const char *output_name;

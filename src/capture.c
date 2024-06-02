@@ -249,7 +249,7 @@ bool capture(Config *config) {
         printf("Compositor              : %s\n", compositor2str(config->compositor));
         printf("Mode                    : %s\n", mode2str(config->mode));
         printf("Cursor                  : %s\n", config->cursor ? "Shown" : "Hidden");
-        printf("Clipboard               : %s\n", config->no_clipboard ? "Disabled" : "Enabled");
+        printf("Save to                 : %s\n", savemode2str(config->save_mode));
         printf("Scale                   : %.1f\n", config->scale);
         printf("Image type              : %s\n", imgtype2str(config->imgtype));
         switch (config->imgtype) {

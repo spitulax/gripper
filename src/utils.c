@@ -32,6 +32,13 @@ static const char *imgtype_name[] = {
     [IMGTYPE_JPEG] = "jpeg",
 };
 
+static const char *savemode_name[] = {
+    [SAVEMODE_NONE]                      = "None",
+    [SAVEMODE_DISK]                      = "Disk",
+    [SAVEMODE_CLIPBOARD]                 = "Clipboard",
+    [SAVEMODE_DISK | SAVEMODE_CLIPBOARD] = "Disk & Clipboard",
+};
+
 char *malloc_strf(const char *fmt, ...) {
     va_list args;
 
@@ -166,6 +173,10 @@ defer:
     };
     if (dev_null != -1) close(dev_null);
     return result;
+}
+
+const char *savemode2str(SaveMode save_mode) {
+    return savemode_name[save_mode];
 }
 
 Compositor str2compositor(const char *str) {

@@ -9,13 +9,21 @@
 #define alloc_strf(fmt, ...) mp_string_newf(&config->alloc, fmt, __VA_ARGS__)
 
 bool notify(Config *config, const char *fname) {
-    if (!command_found("notify-send")) return false;
+    if (!command_found("notify-send") || config->save_mode == SAVEMODE_NONE) return false;
+    const char *name = NULL;
+    if (config->save_mode == SAVEMODE_DISK) {
+        name = fname;
+    } else if (config->save_mode == SAVEMODE_CLIPBOARD) {
+        name = "clipboard";
+    } else if (config->save_mode == (SAVEMODE_DISK | SAVEMODE_CLIPBOARD)) {
+        name = alloc_strf("%s and clipboard", fname).cstr;
+    }
 
     // TODO: maybe print the region?
     // TODO: add actions to the notification that maybe brings an option to view/edit the image
     char *cmd = alloc_strf("notify-send -t 3000 -a Gripper 'Screenshot taken (%s)' 'Saved to %s'",
                            mode2str(config->mode),
-                           fname)
+                           name)
                     .cstr;
 
     if (run_cmd(cmd, NULL, 0) == -1) {
@@ -28,8 +36,11 @@ bool notify(Config *config, const char *fname) {
 
 bool grim(Config *config, const char *region) {
     char       *cmd   = NULL;
-    const char *fname = get_fname(config);
-    assert(fname != NULL);
+    const char *fname = NULL;
+    if (config->save_mode & SAVEMODE_DISK) {
+        fname = get_fname(config);
+        assert(fname != NULL);
+    }
 
     mp_String options =
         mp_string_newf(&config->alloc, "-t %s", config->scale, imgtype2str(config->imgtype));
@@ -49,11 +60,14 @@ bool grim(Config *config, const char *region) {
     if (config->cursor) options = alloc_strf("%s -c", options.cstr);
     if (config->output_name != NULL && region == NULL)
         options = alloc_strf("%s -o %s", options.cstr, config->output_name);
+    if (config->region != NULL) options = alloc_strf("%s -g \"%s\"", options.cstr, region);
 
-    if (region == NULL) {
+    if (config->save_mode & SAVEMODE_DISK) {
         cmd = alloc_strf("grim %s - > %s", options.cstr, fname).cstr;
-    } else {
-        cmd = alloc_strf("grim %s -g \"%s\" - > %s", options.cstr, region, fname).cstr;
+    } else if (config->save_mode == SAVEMODE_CLIPBOARD) {
+        cmd = alloc_strf("grim %s - | wl-copy", options.cstr).cstr;
+    } else if (config->save_mode == SAVEMODE_NONE) {
+        cmd = alloc_strf("grim %s - >/dev/null", options.cstr).cstr;
     }
 
 #ifdef DEBUG
@@ -66,7 +80,7 @@ bool grim(Config *config, const char *region) {
 
     notify(config, fname);
 
-    if (!config->no_clipboard) {
+    if (config->save_mode == (SAVEMODE_DISK | SAVEMODE_CLIPBOARD)) {
         cmd = alloc_strf("wl-copy < %s", fname).cstr;
 #ifdef DEBUG
         if (config->verbose) printf("$ %s\n", cmd);

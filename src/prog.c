@@ -78,6 +78,8 @@ void usage(Config *config) {
     printf("    --version, -v       Show version.\n");
     printf("    --check             Check compositor support and needed commands.\n");
     printf("Options:\n");
+    printf("    --save              Save the captured image only to disk.\n");
+    printf("    --copy              Save the captured image only to clipboard.\n");
     printf("    -d <dir>            Where the screenshot is saved (defaults to environment\n");
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots).\n");
     printf("    -f <path>           Where the screenshot is saved to (overrides -d).\n");
@@ -90,11 +92,11 @@ void usage(Config *config) {
     printf("                        Defaults to 6 (for -t png, ignored elsewhere).\n");
     printf("    --jpeg-quality      JPEG quality from 0 to 100.\n");
     printf("                        Defaults to 80 (for -t jpeg, ignored elsewhere).\n");
-    printf("    --no-cache-region   Used in mode region and active-window.\n");
-    printf("                        Don't cache the region that would be captured.\n");
+    printf("    --no-save-region    Don't cache the region that would be captured.\n");
     printf("                        This means it will not override the region that\n");
     printf("                        should be used by last-region.\n");
-    printf("    --no-clipboard      Don't copy the captured image into the clipboard.\n");
+    printf("                        Used in mode region and active-window.\n");
+    printf("    --no-save           Don't save the captured image anywhere.\n");
     printf("    --verbose           Print extra output.\n");
 }
 
@@ -129,10 +131,14 @@ int parse_args(int argc, char *argv[], Config *config) {
         } else if (strcmp(argv[i], "-o") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->output_name = argv[++i];
-        } else if (strcmp(argv[i], "--no-cache-region") == 0) {
+        } else if (strcmp(argv[i], "--no-save-region") == 0) {
             config->no_cache_region = true;
-        } else if (strcmp(argv[i], "--no-clipboard") == 0) {
-            config->no_clipboard = true;
+        } else if (strcmp(argv[i], "--save") == 0) {
+            config->save_mode = SAVEMODE_DISK;
+        } else if (strcmp(argv[i], "--copy") == 0) {
+            config->save_mode = SAVEMODE_CLIPBOARD;
+        } else if (strcmp(argv[i], "--no-save") == 0) {
+            config->save_mode = SAVEMODE_NONE;
         } else if (strcmp(argv[i], "-t") == 0) {
             if (i + 1 >= (size_t)argc) break;
             const char *type = argv[++i];
@@ -197,10 +203,10 @@ int parse_args(int argc, char *argv[], Config *config) {
 void prepare_options(Config *config) {
     config->compositor           = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
     config->compositor_supported = config->compositor != COMP_NONE;
-    config->no_clipboard         = !command_found("wl-copy");
     config->imgtype              = IMGTYPE_PNG;
     config->png_level            = DEFAULT_PNG_LEVEL;
     config->jpeg_quality         = DEFAULT_JPEG_QUALITY;
+    config->save_mode            = SAVEMODE_DISK | SAVEMODE_CLIPBOARD;
     config->scale                = 1.0;
     config->wait_time            = 0;
 }

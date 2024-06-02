@@ -37,6 +37,8 @@ const char *mode2str(Mode mode);
 //    In this case it returns 0 on success, returns -1 on failure
 ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes);
 
+const char *savemode2str(SaveMode save_mode);
+
 Compositor str2compositor(const char *str);
 
 void usage(Config *config);
