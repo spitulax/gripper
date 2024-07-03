@@ -47,4 +47,13 @@ stdenv.mkDerivation rec {
         jq
       ]}
   '';
+
+  meta = with lib; {
+    platforms = platforms.linux;
+    description = "Simple and easy to use screenshot utility for Wayland";
+    mainProgram = [ "gripper" ];
+    homepage = "https://github.com/spitulax/gripper";
+    license = licenses.mit;
+    maintainers = with maintainers; [ spitulax ];
+  };
 }
