@@ -14,6 +14,10 @@ if get_option('buildtype').startswith('debug')
   add_project_arguments(['-Og', '-DDEBUG'], language: 'c')
 endif
 
+add_project_arguments('-DPROG_NAME="' + meson.project_name() + '"', language: 'c')
+add_project_arguments('-DPROG_VERSION="' + meson.project_version() + '"', language: 'c')
+add_project_arguments(['-Wconversion', '-Wsign-conversion', '-Wpedantic'], language: 'c')
+
 subdir('src')
 
 executable(

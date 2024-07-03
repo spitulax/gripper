@@ -191,10 +191,12 @@ int parse_args(int argc, char *argv[], Config *config) {
             }
         } else if (strcmp(argv[i], "-w") == 0) {
             if (i + 1 >= (size_t)argc) break;
-            config->wait_time = atoui(argv[++i]);
-            if (config->wait_time < 0) {
+            int wait_time = atoui(argv[++i]);
+            if (wait_time < 0) {
                 eprintf("Input a positive number\n");
                 return 0;
+            } else {
+                config->wait_time = (uint32_t)wait_time;
             }
         } else {
             return 0;

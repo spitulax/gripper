@@ -48,11 +48,11 @@ char *malloc_strf(const char *fmt, ...) {
     assert(size >= 0 && "failed to count string size");
     va_end(args);
 
-    char *ptr = malloc(size + 1);
+    char *ptr = malloc((size_t)size + 1);
     assert(ptr != NULL);
 
     va_start(args, fmt);
-    int result_size = vsnprintf(ptr, size + 1, fmt, args);
+    int result_size = vsnprintf(ptr, (size_t)size + 1, fmt, args);
     assert(result_size == size);
     va_end(args);
 

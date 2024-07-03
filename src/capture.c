@@ -16,7 +16,7 @@
 #define DEFAULT_OUTPUT_SIZE 1024
 
 // NOTE: replaces last character of `region` into newline
-bool cache_region(Config *config, char *region, size_t nbytes) {
+bool cache_region(Config *config, char *region, ssize_t nbytes) {
     if (config->no_cache_region) return true;
 
     bool  result            = true;
@@ -66,10 +66,10 @@ bool capture_region(Config *config) {
         // FIXME: when you switch workspace while on slurp
         // selection still snaps onto the position of windows in initial workspace
         case COMP_HYPRLAND : {
-            cmd = hyprland_get_windows(&config->alloc);
+            cmd = mp_string_new(&config->alloc, hyprland_windows);
         } break;
         case COMP_SWAY : {
-            cmd = sway_get_windows(&config->alloc);
+            cmd = mp_string_new(&config->alloc, sway_windows);
         } break;
         case COMP_NONE : {
             cmd = mp_string_new(&config->alloc, "slurp");
@@ -143,13 +143,13 @@ bool capture_active_window(Config *config) {
 
     char *region = mp_allocator_alloc(&config->alloc, DEFAULT_OUTPUT_SIZE);
 
-    char *cmd = NULL;
+    mp_String cmd = { 0 };
     switch (config->compositor) {
         case COMP_HYPRLAND : {
-            cmd = hyprland_get_active_window(&config->alloc).cstr;
+            cmd = mp_string_new(&config->alloc, hyprland_active_window);
         } break;
         case COMP_SWAY : {
-            cmd = sway_get_active_window(&config->alloc).cstr;
+            cmd = mp_string_new(&config->alloc, sway_active_window);
         } break;
         case COMP_NONE : {
             print_comp_support(config->compositor_supported);
@@ -160,7 +160,7 @@ bool capture_active_window(Config *config) {
         }
     }
 
-    ssize_t bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
+    ssize_t bytes = run_cmd(cmd.cstr, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
         eprintf("Failed to get information about window position\n");
         return false;
@@ -179,21 +179,21 @@ bool capture_custom(Config *config) {
     if (!grim(config, config->region)) return false;
     if (!cache_region(config,
                       mp_string_newf(&config->alloc, "%s\0", config->region).cstr,
-                      strlen(config->region) + 1))
+                      (ssize_t)strlen(config->region) + 1))
         return false;
 
     return true;
 }
 
 bool get_current_output_name(Config *config) {
-    char *output_name = mp_allocator_alloc(&config->alloc, DEFAULT_OUTPUT_SIZE);
-    char *cmd         = NULL;
+    char     *output_name = mp_allocator_alloc(&config->alloc, DEFAULT_OUTPUT_SIZE);
+    mp_String cmd         = { 0 };
     switch (config->compositor) {
         case COMP_HYPRLAND : {
-            cmd = hyprland_get_active_monitor(&config->alloc).cstr;
+            cmd = mp_string_new(&config->alloc, hyprland_active_monitor);
         } break;
         case COMP_SWAY : {
-            cmd = sway_get_active_monitor(&config->alloc).cstr;
+            cmd = mp_string_new(&config->alloc, sway_active_monitor);
         } break;
         case COMP_NONE : {
             config->output_name = NULL;
@@ -204,7 +204,7 @@ bool get_current_output_name(Config *config) {
         } break;
     }
 
-    ssize_t bytes = run_cmd(cmd, output_name, DEFAULT_OUTPUT_SIZE);
+    ssize_t bytes = run_cmd(cmd.cstr, output_name, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || output_name == NULL) {
         eprintf("Failed to get information about current monitor\n");
         return false;

@@ -442,11 +442,11 @@ static void *mp_arena_dup(mp_Arena *self, void *data, size_t size) {
 
 mp_String mp_string_new(mp_Allocator *allocator, const char *str) {
     int size = snprintf(NULL, 0, "%s", str);
-    _MEMPLUS_ASSERT(size >= 0 && "failed to count string size");
-    char *result      = mp_allocator_alloc(allocator, size + 1);
-    int   result_size = snprintf(result, size + 1, "%s", str);
+    _MEMPLUS_ASSERT(size > 0 && "failed to count string size");
+    char *result      = mp_allocator_alloc(allocator, (size_t)size + 1);
+    int   result_size = snprintf(result, (size_t)size + 1, "%s", str);
     _MEMPLUS_ASSERT(result_size == size);
-    return (mp_String){ result_size, result };
+    return (mp_String){ (size_t)result_size, result };
 }
 
 mp_String mp_string_newf(mp_Allocator *allocator, const char *fmt, ...) {
@@ -454,24 +454,24 @@ mp_String mp_string_newf(mp_Allocator *allocator, const char *fmt, ...) {
 
     va_start(args, fmt);
     int size = vsnprintf(NULL, 0, fmt, args);
-    _MEMPLUS_ASSERT(size >= 0 && "failed to count string size");
+    _MEMPLUS_ASSERT(size > 0 && "failed to count string size");
     va_end(args);
 
-    char *result = mp_allocator_alloc(allocator, size + 1);
+    char *result = mp_allocator_alloc(allocator, (size_t)size + 1);
 
     va_start(args, fmt);
-    int result_size = vsnprintf(result, size + 1, fmt, args);
+    int result_size = vsnprintf(result, (size_t)size + 1, fmt, args);
     _MEMPLUS_ASSERT(result_size == size);
     va_end(args);
 
-    return (mp_String){ result_size, result };
+    return (mp_String){ (size_t)result_size, result };
 }
 
 mp_String mp_string_dup(mp_Allocator *allocator, mp_String str) {
     int size = snprintf(NULL, 0, "%s", str.cstr);
-    _MEMPLUS_ASSERT((size >= 0 || (size_t)size != str.size) && "failed to count string size");
-    char *ptr = mp_allocator_dup(allocator, str.cstr, size);
-    return (mp_String){ size, ptr };
+    _MEMPLUS_ASSERT((size > 0 || (size_t)size != str.size) && "failed to count string size");
+    char *ptr = mp_allocator_dup(allocator, str.cstr, (size_t)size);
+    return (mp_String){ (size_t)size, ptr };
 }
 
 #endif /* ifdef MEMPLUS_IMPLEMENTATION */

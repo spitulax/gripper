@@ -16,9 +16,6 @@
 #include "prog.h"
 #include "utils.h"
 
-#define PROG_NAME    "gripper"
-#define PROG_VERSION "v1.0.0"
-
 #define DEFAULT_DIR       "Pictures/Screenshots"
 #define LAST_REGION_FNAME "gripper-last-region"
 

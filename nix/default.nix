@@ -13,15 +13,15 @@
 , debug ? false
 }:
 let
-  version = with lib; removePrefix "v" (elemAt
-    (pipe (readFile ../src/main.c) [
+  version = with lib; elemAt
+    (pipe (readFile ../meson.build) [
       (splitString "\n")
-      (filter (hasPrefix "#define PROG_VERSION"))
+      (filter (hasPrefix "  version : "))
       head
-      (splitString " ")
+      (splitString " : ")
       last
-      (splitString "\"")
-    ]) 1);
+      (splitString "'")
+    ]) 1;
 in
 stdenv.mkDerivation rec {
   pname = "gripper";

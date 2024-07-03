@@ -53,7 +53,7 @@ typedef struct {
     bool        cursor;
     bool        no_cache_region;
     double      scale;
-    int32_t     wait_time;
+    uint32_t    wait_time;
     const char *output_name;
     Imgtype     imgtype;
     int         png_level;
