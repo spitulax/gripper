@@ -8,6 +8,7 @@
 , meson
 , ninja
 , pkg-config
+, jq
 
 , debug ? false
 }:
@@ -43,6 +44,7 @@ stdenv.mkDerivation rec {
         slurp
         wl-clipboard
         libnotify
+        jq
       ]}
   '';
 }
