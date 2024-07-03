@@ -81,6 +81,9 @@ void usage(Config *config) {
     printf("    --version, -v       Show version.\n");
     printf("    --check             Check compositor support and needed commands.\n");
     printf("Options:\n");
+    printf("    -c                  Include cursor in the screenshot.\n");
+    printf("    --all               Capture all outputs.\n");
+    printf("                        Ignored outside of mode `full`.\n");
     printf("    --save              Save the captured image only to disk.\n");
     printf("    --copy              Save the captured image only to clipboard.\n");
     printf("    -d <dir>            Where the screenshot is saved (defaults to environment\n");
@@ -88,15 +91,12 @@ void usage(Config *config) {
     printf("    -f <path>           Where the screenshot is saved to (overrides -d).\n");
     printf("    -o <output>         The output/monitor name to capture.\n");
     printf("                        Ignored outside of mode `full`.\n");
-    printf("    --all               Capture all outputs.\n");
-    printf("                        Ignored outside of mode `full`.\n");
     printf("    -w <sec>            Wait for given seconds before capturing.\n");
     printf("    -s <factor>         Scale the final image.\n");
-    printf("    -c                  Include cursor in the screenshot.\n");
     printf("    -t <png|ppm|jpeg>   The image type. Defaults to png.\n");
-    printf("    --png-level         PNG compression level from 0 to 9.\n");
+    printf("    --png-level <n>     PNG compression level from 0 to 9.\n");
     printf("                        Defaults to 6 (for -t png, ignored elsewhere).\n");
-    printf("    --jpeg-quality      JPEG quality from 0 to 100.\n");
+    printf("    --jpeg-quality <n>  JPEG quality from 0 to 100.\n");
     printf("                        Defaults to 80 (for -t jpeg, ignored elsewhere).\n");
     printf("    --no-save-region    Don't cache the region that would be captured.\n");
     printf("                        This means it will not override the region that\n");
