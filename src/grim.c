@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define alloc_strf(fmt, ...) mp_string_newf(&config->alloc, fmt, __VA_ARGS__)
-
 bool notify(Config *config, const char *fname) {
     if (!command_found("notify-send") || config->save_mode == SAVEMODE_NONE) return false;
     const char *name = NULL;
@@ -43,7 +41,7 @@ bool grim(Config *config, const char *region) {
     }
 
     mp_String options =
-        mp_string_newf(&config->alloc, "-t %s", config->scale, imgtype2str(config->imgtype));
+        mp_string_newf(g_alloc, "-t %s", config->scale, imgtype2str(config->imgtype));
     // NOTE: too many allocs, but it may be just fine
     if (config->scale != 1.0) options = alloc_strf("%s -s %f", options.cstr, config->scale);
     if (config->jpeg_quality != DEFAULT_JPEG_QUALITY || config->png_level != DEFAULT_PNG_LEVEL) {

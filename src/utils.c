@@ -85,7 +85,7 @@ const char *get_fname(Config *config) {
 
     const char *ext = imgtype2str(config->imgtype);
 
-    return mp_string_newf(&g_alloc,
+    return mp_string_newf(g_alloc,
                           "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.%s",
                           config->screenshot_dir,
                           now->tm_year + 1900,
@@ -191,7 +191,7 @@ bool verify_geometry(const char *geometry) {
 bool make_dir(const char *path) {
     struct stat dir_stat;
     if (stat(path, &dir_stat)) {
-        char *cmd = mp_string_newf(&g_alloc, "mkdir -p %s", path).cstr;
+        char *cmd = mp_string_newf(g_alloc, "mkdir -p %s", path).cstr;
         int   ret = system(cmd);
         if (ret == 0) {
             printf("Created %s\n", path);

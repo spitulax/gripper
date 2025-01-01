@@ -19,23 +19,22 @@
 #define DEFAULT_DIR       "Pictures/Screenshots"
 #define LAST_REGION_FNAME "gripper-last-region"
 
-#define alloc_strf(fmt, ...) mp_string_newf(&config.alloc, fmt, __VA_ARGS__)
+mp_Allocator       *g_alloc;
+static mp_Allocator alloc;
 
 int main(int argc, char *argv[]) {
     mp_Arena arena  = mp_arena_new();
     int      result = EXIT_SUCCESS;
-    char    *cmd    = NULL;
     // variables that will be freed after defer must be initialized before any call to return_defer
     char *alt_dir               = NULL;
     char *last_region_file_path = NULL;
-    char *cache_dir             = NULL;
 
     static Config config = { 0 };
     config.prog_name     = PROG_NAME;
     config.prog_version  = PROG_VERSION;
 
-    mp_Allocator alloc = mp_arena_new_allocator(&arena);
-    config.alloc       = alloc;
+    alloc   = mp_arena_new_allocator(&arena);
+    g_alloc = &alloc;
 
     prepare_options(&config);
     int parse_result = parse_args(argc, argv, &config);
@@ -64,26 +63,14 @@ int main(int argc, char *argv[]) {
     }
 
     // Create the directory if it didn't exist
-    {
-        struct stat dir_stat;
-        if (stat(config.screenshot_dir, &dir_stat)) {
-            cmd     = alloc_strf("mkdir -p %s", config.screenshot_dir).cstr;
-            int ret = system(cmd);
-            if (ret == 0) {
-                printf("Created %s\n", config.screenshot_dir);
-            } else {
-                eprintf("Failed to create directory %s\n", config.screenshot_dir);
-                return_defer(EXIT_FAILURE);
-            }
-        }
-    }
+    if (!make_dir(config.screenshot_dir)) return_defer(EXIT_FAILURE);
 
     // Assign config.last_region_file
-    cache_dir = getenv("XDG_CACHE_HOME");
-    if (cache_dir == NULL) {
-        cache_dir = alloc_strf("%s/.cache", home_dir).cstr;
+    config.cache_dir = getenv("XDG_CACHE_HOME");
+    if (config.cache_dir == NULL) {
+        config.cache_dir = alloc_strf("%s/.cache", home_dir).cstr;
     }
-    last_region_file_path   = alloc_strf("%s/" LAST_REGION_FNAME, cache_dir).cstr;
+    last_region_file_path   = alloc_strf("%s/" LAST_REGION_FNAME, config.cache_dir).cstr;
     config.last_region_file = last_region_file_path;
 
     if (!capture(&config)) return_defer(EXIT_FAILURE);

@@ -19,6 +19,8 @@
 
 #define array_len(array) (sizeof(array) / sizeof(array[0]))
 
+#define alloc_strf(fmt, ...) mp_string_newf(g_alloc, fmt, __VA_ARGS__)
+
 char *malloc_strf(const char *fmt, ...);
 
 bool command_found(const char *command);

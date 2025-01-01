@@ -16,6 +16,7 @@
 #define DEFAULT_OUTPUT_SIZE 1024
 
 // NOTE: replaces last character of `region` into newline
+// TODO: make config const (and for others)
 bool cache_region(Config *config, char *region, ssize_t nbytes) {
     if (config->no_cache_region) return true;
 
@@ -51,7 +52,7 @@ bool capture_full(Config *config) {
 bool capture_region(Config *config) {
     if (config->verbose) printf("*Capturing region*\n");
 
-    char *region = mp_allocator_alloc(&g_alloc, DEFAULT_OUTPUT_SIZE);
+    char *region = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
 
     if (config->verbose) {
         if (config->compositor_supported) {
@@ -68,20 +69,20 @@ bool capture_region(Config *config) {
         // FIXME: when you switch workspace while on slurp
         // selection still snaps onto the position of windows in initial workspace
         case COMP_HYPRLAND : {
-            cmd = mp_string_new(&g_alloc, hyprland_windows);
+            cmd = mp_string_new(g_alloc, hyprland_windows);
         } break;
         case COMP_SWAY : {
-            cmd = mp_string_new(&g_alloc, sway_windows);
+            cmd = mp_string_new(g_alloc, sway_windows);
         } break;
         case COMP_NONE : {
-            cmd = mp_string_new(&g_alloc, "slurp");
+            cmd = mp_string_new(g_alloc, "slurp");
         } break;
         case COMP_COUNT : {
             assert(0 && "unreachable");
         }
     }
 
-    cmd = mp_string_newf(&g_alloc, "%s | %s", cmd.cstr, slurp_cmd);
+    cmd = mp_string_newf(g_alloc, "%s | %s", cmd.cstr, slurp_cmd);
 
     ssize_t bytes = run_cmd(cmd.cstr, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
@@ -104,7 +105,7 @@ bool capture_last_region(Config *config) {
 
     bool  result            = true;
     FILE *region_cache_file = NULL;
-    char *region            = mp_allocator_alloc(&g_alloc, DEFAULT_OUTPUT_SIZE);
+    char *region            = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
 
     region_cache_file = fopen(config->last_region_file, "r");
     if (region_cache_file == NULL) {
@@ -143,15 +144,15 @@ bool capture_active_window(Config *config) {
 
     if (config->verbose) printf("*Capturing active window*\n");
 
-    char *region = mp_allocator_alloc(&g_alloc, DEFAULT_OUTPUT_SIZE);
+    char *region = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
 
     mp_String cmd = { 0 };
     switch (config->compositor) {
         case COMP_HYPRLAND : {
-            cmd = mp_string_new(&g_alloc, hyprland_active_window);
+            cmd = mp_string_new(g_alloc, hyprland_active_window);
         } break;
         case COMP_SWAY : {
-            cmd = mp_string_new(&g_alloc, sway_active_window);
+            cmd = mp_string_new(g_alloc, sway_active_window);
         } break;
         case COMP_NONE : {
             print_comp_support(config->compositor_supported);
@@ -180,7 +181,7 @@ bool capture_custom(Config *config) {
 
     if (!grim(config, config->region)) return false;
     if (!cache_region(config,
-                      mp_string_newf(&g_alloc, "%s\0", config->region).cstr,
+                      mp_string_newf(g_alloc, "%s\0", config->region).cstr,
                       (ssize_t)strlen(config->region) + 1))
         return false;
 
@@ -188,14 +189,14 @@ bool capture_custom(Config *config) {
 }
 
 bool get_current_output_name(Config *config) {
-    char     *output_name = mp_allocator_alloc(&g_alloc, DEFAULT_OUTPUT_SIZE);
+    char     *output_name = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
     mp_String cmd         = { 0 };
     switch (config->compositor) {
         case COMP_HYPRLAND : {
-            cmd = mp_string_new(&g_alloc, hyprland_active_monitor);
+            cmd = mp_string_new(g_alloc, hyprland_active_monitor);
         } break;
         case COMP_SWAY : {
-            cmd = mp_string_new(&g_alloc, sway_active_monitor);
+            cmd = mp_string_new(g_alloc, sway_active_monitor);
         } break;
         case COMP_NONE : {
             config->output_name = NULL;
@@ -221,7 +222,7 @@ bool capture(Config *config) {
     if (config->output_name != NULL) {
         // Verify if output exists
         mp_String cmd =
-            mp_string_newf(&g_alloc, "grim -t jpeg -q 0 -o %s - >/dev/null", config->output_name);
+            mp_string_newf(g_alloc, "grim -t jpeg -q 0 -o %s - >/dev/null", config->output_name);
         if (run_cmd(cmd.cstr, NULL, 0) == -1) {
             eprintf("Unknown output `%s`\n", config->output_name);
             return false;

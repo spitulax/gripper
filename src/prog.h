@@ -7,6 +7,8 @@
 #define DEFAULT_PNG_LEVEL    6
 #define DEFAULT_JPEG_QUALITY 80
 
+extern mp_Allocator *g_alloc;
+
 typedef enum {
     MODE_FULL,
     MODE_REGION,
@@ -36,12 +38,11 @@ typedef enum {
 } SaveMode;
 
 typedef struct {
-    mp_Allocator alloc;
-
     const char *prog_name;
     const char *prog_version;
     const char *path;
     const char *screenshot_dir;
+    const char *cache_dir;
     const char *last_region_file;
     const char *region;
     Compositor  compositor;
