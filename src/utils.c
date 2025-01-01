@@ -168,7 +168,8 @@ bool verify_geometry(const char *geometry) {
 }
 
 bool make_dir(const char *path) {
-    if (access(path, F_OK) != 0) {
+    struct stat s;
+    if (stat(path, &s) != 0) {
         char *cmd = mp_string_newf(g_alloc, "mkdir -p %s", path).cstr;
         int   ret = system(cmd);
         if (ret == 0) {
@@ -177,6 +178,9 @@ bool make_dir(const char *path) {
             eprintf("Failed to create directory %s\n", path);
             return false;
         }
+    } else if (!S_ISDIR(s.st_mode)) {
+        eprintf("%s already exists but it is not a directory\n", path);
+        return false;
     }
     return true;
 }
