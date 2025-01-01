@@ -123,7 +123,7 @@ bool capture_last_region(void) {
     }
     region[bytes - 1] = '\0';    // trim the final newline
 
-    if (!verify_geometry(region)) return false;
+    if (!verify_geometry(region)) return_defer(false);
 
     if (g_config->verbose) printf("Selected region: %s\n", region);
     if (!grim(region)) return_defer(false);

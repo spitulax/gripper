@@ -3,6 +3,7 @@
 
 #include "memplus.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 #define DEFAULT_PNG_LEVEL    6
 #define DEFAULT_JPEG_QUALITY 80
@@ -46,7 +47,7 @@ typedef struct {
     Compositor  compositor;
     bool        compositor_supported;
     Mode        mode;
-    SaveMode    save_mode;
+    uint32_t    save_mode;    // bitmask of `SaveMode`
 
     bool        verbose;
     bool        cursor;

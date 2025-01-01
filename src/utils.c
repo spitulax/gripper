@@ -87,10 +87,11 @@ const char *mode2str(Mode mode) {
 ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes) {
     ssize_t result = -1;
 
-    int     pipe_fd[2];
-    int     read_pipe  = -1;
-    int     write_pipe = -1;
-    int     dev_null   = open("/dev/null", O_WRONLY | O_CREAT, 0666);
+    int pipe_fd[2];
+    int read_pipe  = -1;
+    int write_pipe = -1;
+    int dev_null   = open("/dev/null", O_WRONLY | O_CREAT, 0666);
+    assert(dev_null != -1);
     ssize_t bytes_read = -1;
 
     if (buf != NULL) {
