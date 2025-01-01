@@ -1,7 +1,7 @@
 project(
   'gripper',
   'c',
-  version : '1.0.1',
+  version : run_command('cat', join_paths(meson.project_source_root(), 'VERSION'), check: true).stdout().strip(),
   license: 'MIT',
   default_options : [
     'c_std=c11',

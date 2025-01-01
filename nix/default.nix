@@ -13,15 +13,7 @@
 , debug ? false
 }:
 let
-  version = with lib; elemAt
-    (pipe (readFile ../meson.build) [
-      (splitString "\n")
-      (filter (hasPrefix "  version : "))
-      head
-      (splitString " : ")
-      last
-      (splitString "'")
-    ]) 1;
+  version = lib.trim (lib.readFile ../VERSION);
 in
 stdenv.mkDerivation rec {
   pname = "gripper";
@@ -48,12 +40,11 @@ stdenv.mkDerivation rec {
       ]}
   '';
 
-  meta = with lib; {
-    platforms = platforms.linux;
+  meta = {
+    platforms = lib.platforms.linux;
     description = "Simple and easy to use screenshot utility for Wayland";
-    mainProgram = [ "gripper" ];
+    mainProgram = "gripper";
     homepage = "https://github.com/spitulax/gripper";
-    license = licenses.mit;
-    maintainers = with maintainers; [ spitulax ];
+    license = lib.licenses.mit;
   };
 }

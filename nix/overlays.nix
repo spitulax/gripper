@@ -1,6 +1,6 @@
 { self, lib, inputs }: {
-  default = final: prev: rec {
+  default = final: prev: {
     gripper = final.callPackage ./default.nix { };
-    gripper-debug = gripper.override { debug = true; };
+    gripper-debug = final.callPackage ./default.nix { debug = true; };
   };
 }
