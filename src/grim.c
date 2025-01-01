@@ -59,7 +59,27 @@ bool grim(const Config *config, const char *region) {
     if (region != NULL) options = alloc_strf("%s -g \"%s\"", options.cstr, region);
 
     if (config->save_mode & SAVEMODE_DISK) {
-        cmd = alloc_strf("grim %s - > %s", options.cstr, fname).cstr;
+        if (access(config->output_path, F_OK) == 0) {
+            struct stat s;
+            if (stat(config->output_path, &s) != 0) {
+                eprintf("Failed to stat %s\n", config->output_path);
+                return false;
+            }
+            if (!S_ISREG(s.st_mode)) {
+                eprintf("%s already exists and it is not a regular file\n", config->output_path);
+                return false;
+            }
+            printf("Overriding %s, are you sure? [y/N] ", config->output_path);
+#define BUFLEN 3    // enough for one character, a newline, and a '\0'
+            char buf[BUFLEN];
+            if (fgets(buf, BUFLEN, stdin) == NULL) {
+                eprintf("Failed to read input\n");
+                return false;
+            }
+            if (tolower(buf[0]) != 'y') return false;
+#undef BUFLEN
+        }
+        cmd = alloc_strf("grim %s - > %s", options.cstr, config->output_path).cstr;
     } else if (config->save_mode == SAVEMODE_CLIPBOARD) {
         cmd = alloc_strf("grim %s - | wl-copy", options.cstr).cstr;
     } else if (config->save_mode == SAVEMODE_NONE) {
