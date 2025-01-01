@@ -64,7 +64,7 @@ typedef struct {
 } Config;
 
 int  parse_args(int argc, char *argv[], Config *config);
-void prepare_options(Config *config);
+void config_init(Config *config);
 // TODO: check if compositor supports needed wayland protocols
 void print_comp_support(bool supported);
 

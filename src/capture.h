@@ -4,6 +4,6 @@
 #include "prog.h"
 #include <stdbool.h>
 
-bool capture(Config *config);
+bool capture(const Config *config);
 
 #endif /* ifndef CAPTURE_H */

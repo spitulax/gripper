@@ -19,6 +19,8 @@
 #define DEFAULT_DIR       "Pictures/Screenshots"
 #define LAST_REGION_FNAME "gripper-last-region"
 
+// TODO: Test output_name
+
 mp_Allocator       *g_alloc;
 static mp_Allocator alloc;
 
@@ -36,7 +38,7 @@ int main(int argc, char *argv[]) {
     alloc   = mp_arena_new_allocator(&arena);
     g_alloc = &alloc;
 
-    prepare_options(&config);
+    config_init(&config);
     int parse_result = parse_args(argc, argv, &config);
     switch (parse_result) {
         case 2 : break;
@@ -72,6 +74,19 @@ int main(int argc, char *argv[]) {
     }
     last_region_file_path   = alloc_strf("%s/" LAST_REGION_FNAME, config.cache_dir).cstr;
     config.last_region_file = last_region_file_path;
+
+    // Get the output name
+    if (config.output_name != NULL) {
+        // Verify if output exists
+        mp_String cmd =
+            mp_string_newf(g_alloc, "grim -t jpeg -q 0 -o %s - >/dev/null", config.output_name);
+        if (run_cmd(cmd.cstr, NULL, 0) == -1) {
+            eprintf("Unknown output `%s`\n", config.output_name);
+            return false;
+        }
+    } else if (config.mode == MODE_FULL && !config.all_outputs) {
+        if (!set_current_output_name(&config)) return false;
+    }
 
     if (!capture(&config)) return_defer(EXIT_FAILURE);
 

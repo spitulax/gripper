@@ -21,6 +21,8 @@
 
 #define alloc_strf(fmt, ...) mp_string_newf(g_alloc, fmt, __VA_ARGS__)
 
+#define DEFAULT_OUTPUT_SIZE 1024
+
 char *malloc_strf(const char *fmt, ...);
 
 bool command_found(const char *command);
@@ -29,7 +31,7 @@ const char *compositor2str(Compositor compositor);
 
 const char *imgtype2str(Imgtype imgtype);
 
-const char *get_fname(Config *config);
+const char *get_fname(const Config *config);
 
 const char *mode2str(Mode mode);
 
@@ -43,10 +45,12 @@ const char *savemode2str(SaveMode save_mode);
 
 Compositor str2compositor(const char *str);
 
-void usage(Config *config);
+void usage(const Config *config);
 
 bool verify_geometry(const char *geometry);
 
 bool make_dir(const char *path);
+
+bool set_current_output_name(Config *config);
 
 #endif /* ifndef UTILS_H */

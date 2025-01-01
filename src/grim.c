@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-bool notify(Config *config, const char *fname) {
+bool notify(const Config *config, const char *fname) {
     if (!command_found("notify-send") || config->save_mode == SAVEMODE_NONE) return false;
     const char *name = NULL;
     if (config->save_mode == SAVEMODE_DISK) {
@@ -32,7 +32,7 @@ bool notify(Config *config, const char *fname) {
     return true;
 }
 
-bool grim(Config *config, const char *region) {
+bool grim(const Config *config, const char *region) {
     char       *cmd   = NULL;
     const char *fname = NULL;
     if (config->save_mode & SAVEMODE_DISK) {

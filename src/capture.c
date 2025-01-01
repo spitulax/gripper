@@ -13,11 +13,8 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define DEFAULT_OUTPUT_SIZE 1024
-
 // NOTE: replaces last character of `region` into newline
-// TODO: make config const (and for others)
-bool cache_region(Config *config, char *region, ssize_t nbytes) {
+bool cache_region(const Config *config, char *region, ssize_t nbytes) {
     if (config->no_cache_region) return true;
 
     bool  result            = true;
@@ -43,13 +40,13 @@ defer:
     return result;
 }
 
-bool capture_full(Config *config) {
+bool capture_full(const Config *config) {
     if (config->verbose) printf("*Capturing fullscreen*\n");
     if (!grim(config, NULL)) return false;
     return true;
 }
 
-bool capture_region(Config *config) {
+bool capture_region(const Config *config) {
     if (config->verbose) printf("*Capturing region*\n");
 
     char *region = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
@@ -100,7 +97,7 @@ bool capture_region(Config *config) {
     return true;
 }
 
-bool capture_last_region(Config *config) {
+bool capture_last_region(const Config *config) {
     if (config->verbose) printf("*Capturing last region*\n");
 
     bool  result            = true;
@@ -136,7 +133,7 @@ defer:
     return result;
 }
 
-bool capture_active_window(Config *config) {
+bool capture_active_window(const Config *config) {
     if (!config->compositor_supported) {
         print_comp_support(config->compositor_supported);
         return false;
@@ -176,7 +173,7 @@ bool capture_active_window(Config *config) {
     return true;
 }
 
-bool capture_custom(Config *config) {
+bool capture_custom(const Config *config) {
     if (config->verbose) printf("*Capturing custom region*\n");
 
     if (!grim(config, config->region)) return false;
@@ -188,49 +185,7 @@ bool capture_custom(Config *config) {
     return true;
 }
 
-bool get_current_output_name(Config *config) {
-    char     *output_name = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
-    mp_String cmd         = { 0 };
-    switch (config->compositor) {
-        case COMP_HYPRLAND : {
-            cmd = mp_string_new(g_alloc, hyprland_active_monitor);
-        } break;
-        case COMP_SWAY : {
-            cmd = mp_string_new(g_alloc, sway_active_monitor);
-        } break;
-        case COMP_NONE : {
-            config->output_name = NULL;
-            return true;
-        } break;
-        case COMP_COUNT : {
-            assert(0 && "unreachable");
-        } break;
-    }
-
-    ssize_t bytes = run_cmd(cmd.cstr, output_name, DEFAULT_OUTPUT_SIZE);
-    if (bytes == -1 || output_name == NULL) {
-        eprintf("Failed to get information about current monitor\n");
-        return false;
-    }
-    output_name[bytes - 1] = '\0';    // trim the final newline
-    config->output_name    = output_name;
-
-    return true;
-}
-
-bool capture(Config *config) {
-    if (config->output_name != NULL) {
-        // Verify if output exists
-        mp_String cmd =
-            mp_string_newf(g_alloc, "grim -t jpeg -q 0 -o %s - >/dev/null", config->output_name);
-        if (run_cmd(cmd.cstr, NULL, 0) == -1) {
-            eprintf("Unknown output `%s`\n", config->output_name);
-            return false;
-        }
-    } else if (config->mode == MODE_FULL && !config->all_outputs) {
-        if (!get_current_output_name(config)) return false;
-    }
-
+bool capture(const Config *config) {
     if (config->region != NULL)
         if (!verify_geometry(config->region)) return false;
 

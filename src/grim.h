@@ -3,6 +3,6 @@
 
 #include "prog.h"
 
-bool grim(Config *config, const char *region);
+bool grim(const Config *config, const char *region);
 
 #endif /* ifndef GRIM_H */

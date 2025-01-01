@@ -67,7 +67,7 @@ int atoui(const char *str) {
         return result;
 }
 
-void usage(Config *config) {
+void usage(const Config *config) {
     printf("Usage: %s <mode> [options]\n", config->prog_name);
     printf("\n");
     printf("Modes:\n");
@@ -214,7 +214,7 @@ int parse_args(int argc, char *argv[], Config *config) {
     }
 }
 
-void prepare_options(Config *config) {
+void config_init(Config *config) {
     config->compositor           = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
     config->compositor_supported = config->compositor != COMP_NONE;
     config->imgtype              = IMGTYPE_PNG;

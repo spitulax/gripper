@@ -1,6 +1,8 @@
 #include "utils.h"
+#include "hyprland.h"
 #include "memplus.h"
 #include "prog.h"
+#include "sway.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -77,7 +79,7 @@ const char *imgtype2str(Imgtype imgtype) {
     return imgtype_name[imgtype];
 }
 
-const char *get_fname(Config *config) {
+const char *get_fname(const Config *config) {
     if (config->output_path != NULL) return config->output_path;
 
     time_t     now_time = time(NULL);
@@ -200,5 +202,35 @@ bool make_dir(const char *path) {
             return false;
         }
     }
+    return true;
+}
+
+bool set_current_output_name(Config *config) {
+    char     *output_name = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
+    mp_String cmd         = { 0 };
+    switch (config->compositor) {
+        case COMP_HYPRLAND : {
+            cmd = mp_string_new(g_alloc, hyprland_active_monitor);
+        } break;
+        case COMP_SWAY : {
+            cmd = mp_string_new(g_alloc, sway_active_monitor);
+        } break;
+        case COMP_NONE : {
+            config->output_name = NULL;
+            return true;
+        } break;
+        case COMP_COUNT : {
+            assert(0 && "unreachable");
+        } break;
+    }
+
+    ssize_t bytes = run_cmd(cmd.cstr, output_name, DEFAULT_OUTPUT_SIZE);
+    if (bytes == -1 || output_name == NULL) {
+        eprintf("Failed to get information about current monitor\n");
+        return false;
+    }
+    output_name[bytes - 1] = '\0';    // trim the final newline
+    config->output_name    = output_name;
+
     return true;
 }
