@@ -1,8 +1,8 @@
 #ifndef GRIM_H
 #define GRIM_H
 
-#include "prog.h"
+#include <stdbool.h>
 
-bool grim(const Config *config, const char *region);
+bool grim(const char *region);
 
 #endif /* ifndef GRIM_H */

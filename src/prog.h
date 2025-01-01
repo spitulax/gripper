@@ -7,8 +7,6 @@
 #define DEFAULT_PNG_LEVEL    6
 #define DEFAULT_JPEG_QUALITY 80
 
-extern mp_Allocator *g_alloc;
-
 typedef enum {
     MODE_FULL,
     MODE_REGION,
@@ -62,6 +60,9 @@ typedef struct {
     const char *output_path;
     bool        all_outputs;
 } Config;
+
+extern mp_Allocator *g_alloc;
+extern const Config *g_config;
 
 int  parse_args(int argc, char *argv[], Config *config);
 void config_init(Config *config);

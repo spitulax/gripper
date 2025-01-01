@@ -20,7 +20,9 @@
 #define LAST_REGION_FNAME "gripper-last-region"
 
 mp_Allocator       *g_alloc;
+const Config       *g_config;
 static mp_Allocator alloc;
+static Config       config;
 
 int main(int argc, char *argv[]) {
     mp_Arena arena  = mp_arena_new();
@@ -29,10 +31,10 @@ int main(int argc, char *argv[]) {
     char *alt_dir               = NULL;
     char *last_region_file_path = NULL;
 
-    // TODO: make this global
-    static Config config = { 0 };
-    config.prog_name     = PROG_NAME;
-    config.prog_version  = PROG_VERSION;
+    config              = (Config){ 0 };
+    config.prog_name    = PROG_NAME;
+    config.prog_version = PROG_VERSION;
+    g_config            = &config;
 
     alloc   = mp_arena_new_allocator(&arena);
     g_alloc = &alloc;
@@ -43,7 +45,7 @@ int main(int argc, char *argv[]) {
         case 2 : break;
         case 1 : return_defer(EXIT_SUCCESS);
         case 0 : {
-            usage(&config);
+            usage();
             return_defer(EXIT_FAILURE);
         }
         default : assert(0 && "unreachable");
@@ -92,7 +94,7 @@ int main(int argc, char *argv[]) {
         assert(config.output_path != NULL);
     }
 
-    if (!capture(&config)) return_defer(EXIT_FAILURE);
+    if (!capture()) return_defer(EXIT_FAILURE);
 
 defer:
     mp_arena_free(&arena);

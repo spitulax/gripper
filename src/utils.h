@@ -48,7 +48,7 @@ const char *savemode2str(SaveMode save_mode);
 
 Compositor str2compositor(const char *str);
 
-void usage(const Config *config);
+void usage(void);
 
 bool verify_geometry(const char *geometry);
 

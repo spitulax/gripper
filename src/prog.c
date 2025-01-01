@@ -67,8 +67,8 @@ int atoui(const char *str) {
         return result;
 }
 
-void usage(const Config *config) {
-    printf("Usage: %s <mode> [options]\n", config->prog_name);
+void usage(void) {
+    printf("Usage: %s <mode> [options]\n", g_config->prog_name);
     printf("\n");
     printf("Modes:\n");
     printf("    full                Capture fullscreen.\n");
@@ -116,7 +116,7 @@ int parse_args(int argc, char *argv[], Config *config) {
     for (; i < (size_t)argc; ++i) {
         if (i == 1) {
             if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-                usage(config);
+                usage();
                 return 1;
             } else if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
                 printf("%s %s\n", config->prog_name, config->prog_version);

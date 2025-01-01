@@ -1,9 +1,8 @@
 #ifndef CAPTURE_H
 #define CAPTURE_H
 
-#include "prog.h"
 #include <stdbool.h>
 
-bool capture(const Config *config);
+bool capture(void);
 
 #endif /* ifndef CAPTURE_H */

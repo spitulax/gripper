@@ -147,7 +147,6 @@ ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes) {
             return_defer(-1);
         }
 
-        // NOTE: we don't give an f about what's in stderr
         if (WIFEXITED(status) && WEXITSTATUS(status) != 0) return_defer(-1);
 
         if (buf != NULL) {
