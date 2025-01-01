@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -169,7 +170,7 @@ const char *savemode2str(SaveMode save_mode) {
 }
 
 Compositor str2compositor(const char *str) {
-    for (size_t i = 0; i < COMP_COUNT; ++i) {
+    for (uint32_t i = 0; i < COMP_COUNT; ++i) {
         if (strcmp(str, compositor_name[i]) == 0) return i;
     }
     return COMP_NONE;
