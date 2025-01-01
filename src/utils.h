@@ -45,4 +45,6 @@ void usage(Config *config);
 
 bool verify_geometry(const char *geometry);
 
+bool make_dir(const char *path);
+
 #endif /* ifndef UTILS_H */
