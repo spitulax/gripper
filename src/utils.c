@@ -79,25 +79,25 @@ const char *imgtype2str(Imgtype imgtype) {
     return imgtype_name[imgtype];
 }
 
-const char *get_fname(const Config *config) {
-    if (config->output_path != NULL) return config->output_path;
+void set_output_path(Config *config) {
+    if (config->output_path != NULL) return;
 
     time_t     now_time = time(NULL);
     struct tm *now      = localtime(&now_time);
 
     const char *ext = imgtype2str(config->imgtype);
 
-    return mp_string_newf(g_alloc,
-                          "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.%s",
-                          config->screenshot_dir,
-                          now->tm_year + 1900,
-                          now->tm_mon + 1,
-                          now->tm_mday,
-                          now->tm_hour,
-                          now->tm_min,
-                          now->tm_sec,
-                          ext)
-        .cstr;
+    config->output_path = mp_string_newf(g_alloc,
+                                         "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.%s",
+                                         config->screenshot_dir,
+                                         now->tm_year + 1900,
+                                         now->tm_mon + 1,
+                                         now->tm_mday,
+                                         now->tm_hour,
+                                         now->tm_min,
+                                         now->tm_sec,
+                                         ext)
+                              .cstr;
 }
 
 const char *mode2str(Mode mode) {
@@ -191,8 +191,7 @@ bool verify_geometry(const char *geometry) {
 }
 
 bool make_dir(const char *path) {
-    struct stat dir_stat;
-    if (stat(path, &dir_stat)) {
+    if (access(path, F_OK) != 0) {
         char *cmd = mp_string_newf(g_alloc, "mkdir -p %s", path).cstr;
         int   ret = system(cmd);
         if (ret == 0) {

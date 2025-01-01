@@ -1,20 +1,23 @@
 #include "grim.h"
 #include "memplus.h"
 #include "prog.h"
+#include "sys/stat.h"
+#include "unistd.h"
 #include "utils.h"
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-bool notify(const Config *config, const char *fname) {
+bool notify(const Config *config) {
     if (!command_found("notify-send") || config->save_mode == SAVEMODE_NONE) return false;
     const char *name = NULL;
     if (config->save_mode == SAVEMODE_DISK) {
-        name = fname;
+        name = config->output_path;
     } else if (config->save_mode == SAVEMODE_CLIPBOARD) {
         name = "clipboard";
     } else if (config->save_mode == (SAVEMODE_DISK | SAVEMODE_CLIPBOARD)) {
-        name = alloc_strf("%s and clipboard", fname).cstr;
+        name = alloc_strf("%s and clipboard", config->output_path).cstr;
     }
 
     // TODO: maybe print the region?
@@ -33,12 +36,7 @@ bool notify(const Config *config, const char *fname) {
 }
 
 bool grim(const Config *config, const char *region) {
-    char       *cmd   = NULL;
-    const char *fname = NULL;
-    if (config->save_mode & SAVEMODE_DISK) {
-        fname = get_fname(config);
-        assert(fname != NULL);
-    }
+    char *cmd = NULL;
 
     mp_String options =
         mp_string_newf(g_alloc, "-t %s", config->scale, imgtype2str(config->imgtype));
@@ -76,10 +74,10 @@ bool grim(const Config *config, const char *region) {
         return false;
     }
 
-    notify(config, fname);
+    notify(config);
 
     if (config->save_mode == (SAVEMODE_DISK | SAVEMODE_CLIPBOARD)) {
-        cmd = alloc_strf("wl-copy < %s", fname).cstr;
+        cmd = alloc_strf("wl-copy < %s", config->output_path).cstr;
 #ifdef DEBUG
         if (config->verbose) printf("$ %s\n", cmd);
 #endif

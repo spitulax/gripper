@@ -1,6 +1,7 @@
 #ifndef HYPRLAND_H
 #define HYPRLAND_H
 
+// TODO: move this to C file
 static const char *hyprland_active_monitor =
     "hyprctl monitors -j | jq -r '.[] | select(.focused) | .name'";
 

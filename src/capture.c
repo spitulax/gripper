@@ -205,6 +205,7 @@ bool capture(const Config *config) {
             printf("Region                  : %s\n", config->region);
         }
         printf("Screenshot directory    : %s\n", config->screenshot_dir);
+        printf("Output path             : %s\n", config->output_path);
         printf("Last region cache       : %s\n", config->last_region_file);
         printf("Compositor              : %s\n", compositor2str(config->compositor));
         printf("Mode                    : %s\n", mode2str(config->mode));
@@ -229,21 +230,22 @@ bool capture(const Config *config) {
         sleep(config->wait_time);
     }
 
+    bool ok = false;
     switch (config->mode) {
         case MODE_FULL : {
-            return capture_full(config);
+            ok = capture_full(config);
         } break;
         case MODE_REGION : {
-            return capture_region(config);
+            ok = capture_region(config);
         } break;
         case MODE_LAST_REGION : {
-            return capture_last_region(config);
+            ok = capture_last_region(config);
         } break;
         case MODE_ACTIVE_WINDOW : {
-            return capture_active_window(config);
+            ok = capture_active_window(config);
         } break;
         case MODE_CUSTOM : {
-            return capture_custom(config);
+            ok = capture_custom(config);
         } break;
         case MODE_TEST : {
             eprintf("There's nothing here yet :)\n");
@@ -251,5 +253,18 @@ bool capture(const Config *config) {
         } break;
     }
 
-    assert(0 && "unreachable");
+    if (!ok) return false;
+
+    if (config->save_mode == SAVEMODE_NONE) return true;
+    const char *name = NULL;
+    if (config->save_mode == SAVEMODE_DISK) {
+        name = config->output_path;
+    } else if (config->save_mode == SAVEMODE_CLIPBOARD) {
+        name = "clipboard";
+    } else if (config->save_mode == (SAVEMODE_DISK | SAVEMODE_CLIPBOARD)) {
+        name = alloc_strf("%s and clipboard", config->output_path).cstr;
+    }
+    printf("Saved to %s\n", name);
+
+    return true;
 }

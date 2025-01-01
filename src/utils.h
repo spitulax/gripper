@@ -23,6 +23,7 @@
 
 #define DEFAULT_OUTPUT_SIZE 1024
 
+// TODO: remove this
 char *malloc_strf(const char *fmt, ...);
 
 bool command_found(const char *command);
@@ -31,7 +32,9 @@ const char *compositor2str(Compositor compositor);
 
 const char *imgtype2str(Imgtype imgtype);
 
-const char *get_fname(const Config *config);
+void set_output_path(Config *config);
+
+bool set_current_output_name(Config *config);
 
 const char *mode2str(Mode mode);
 
@@ -50,7 +53,5 @@ void usage(const Config *config);
 bool verify_geometry(const char *geometry);
 
 bool make_dir(const char *path);
-
-bool set_current_output_name(Config *config);
 
 #endif /* ifndef UTILS_H */

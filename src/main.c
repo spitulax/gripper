@@ -19,8 +19,6 @@
 #define DEFAULT_DIR       "Pictures/Screenshots"
 #define LAST_REGION_FNAME "gripper-last-region"
 
-// TODO: Test output_name
-
 mp_Allocator       *g_alloc;
 static mp_Allocator alloc;
 
@@ -31,6 +29,7 @@ int main(int argc, char *argv[]) {
     char *alt_dir               = NULL;
     char *last_region_file_path = NULL;
 
+    // TODO: make this global
     static Config config = { 0 };
     config.prog_name     = PROG_NAME;
     config.prog_version  = PROG_VERSION;
@@ -75,7 +74,7 @@ int main(int argc, char *argv[]) {
     last_region_file_path   = alloc_strf("%s/" LAST_REGION_FNAME, config.cache_dir).cstr;
     config.last_region_file = last_region_file_path;
 
-    // Get the output name
+    // Set the output (monitor) name
     if (config.output_name != NULL) {
         // Verify if output exists
         mp_String cmd =
@@ -86,6 +85,11 @@ int main(int argc, char *argv[]) {
         }
     } else if (config.mode == MODE_FULL && !config.all_outputs) {
         if (!set_current_output_name(&config)) return false;
+    }
+
+    if (config.save_mode & SAVEMODE_DISK) {
+        set_output_path(&config);
+        assert(config.output_path != NULL);
     }
 
     if (!capture(&config)) return_defer(EXIT_FAILURE);
