@@ -23,9 +23,6 @@
 
 #define DEFAULT_OUTPUT_SIZE 1024
 
-// TODO: remove this
-char *malloc_strf(const char *fmt, ...);
-
 bool command_found(const char *command);
 
 const char *compositor2str(Compositor compositor);

@@ -150,6 +150,7 @@ int parse_args(int argc, char *argv[], Config *config) {
         } else if (strcmp(argv[i], "--no-save") == 0) {
             config->save_mode = SAVEMODE_NONE;
         } else if (strcmp(argv[i], "-t") == 0) {
+            // TODO: detect filetype if -f is supplied
             if (i + 1 >= (size_t)argc) break;
             const char *type = argv[++i];
             if (strcmp(type, "png") == 0) {

@@ -44,30 +44,10 @@ static const char *savemode_name[] = {
     [SAVEMODE_DISK | SAVEMODE_CLIPBOARD] = "Disk & Clipboard",
 };
 
-char *malloc_strf(const char *fmt, ...) {
-    va_list args;
-
-    va_start(args, fmt);
-    int size = vsnprintf(NULL, 0, fmt, args);
-    assert(size >= 0 && "failed to count string size");
-    va_end(args);
-
-    char *ptr = malloc((size_t)size + 1);
-    assert(ptr != NULL);
-
-    va_start(args, fmt);
-    int result_size = vsnprintf(ptr, (size_t)size + 1, fmt, args);
-    assert(result_size == size);
-    va_end(args);
-
-    return ptr;
-}
-
 bool command_found(const char *command) {
-    char *cmd = malloc_strf("command -v '%s' >/dev/null 2>&1", command);
+    char *cmd = alloc_strf("command -v '%s' >/dev/null 2>&1", command).cstr;
     assert(cmd != NULL);
     int ret = system(cmd);
-    free(cmd);
     return !ret;
 }
 
@@ -179,13 +159,11 @@ Compositor str2compositor(const char *str) {
 }
 
 bool verify_geometry(const char *geometry) {
-    char *cmd = malloc_strf("grim -t jpeg -q 0 -g '%s' - >/dev/null", geometry);
+    char *cmd = alloc_strf("grim -t jpeg -q 0 -g '%s' - >/dev/null", geometry).cstr;
     if (run_cmd(cmd, NULL, 0) == -1) {
         eprintf("Invalid region format `%s`\n", geometry);
-        free(cmd);
         return false;
     }
-    free(cmd);
     return true;
 }
 
