@@ -87,6 +87,11 @@ bool grim(const char *region) {
         cmd = alloc_strf("grim %s - >/dev/null", options.cstr).cstr;
     }
 
+    if (g_config->wait_time > 0) {
+        if (g_config->verbose) printf("*Waiting for %d seconds...*\n", g_config->wait_time);
+        sleep(g_config->wait_time);
+    }
+
 #ifdef DEBUG
     if (g_config->verbose) printf("$ %s\n", cmd);
 #endif

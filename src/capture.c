@@ -198,12 +198,6 @@ bool capture(void) {
         printf("====================\n");
     }
 
-    if (g_config->wait_time > 0) {
-        if (g_config->verbose) printf("*Waiting for %d seconds...*\n", g_config->wait_time);
-        // FIXME: Wait after warning user if gripper will override the output file
-        sleep(g_config->wait_time);
-    }
-
     bool ok = false;
     switch (g_config->mode) {
         case MODE_FULL : {
