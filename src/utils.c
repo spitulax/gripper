@@ -1,8 +1,7 @@
 #include "utils.h"
-#include "hyprland.h"
+#include "compositors.h"
 #include "memplus.h"
 #include "prog.h"
-#include "sway.h"
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -187,31 +186,21 @@ bool make_dir(const char *path) {
 }
 
 bool set_current_output_name(Config *config) {
-    char     *output_name = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
-    mp_String cmd         = { 0 };
-    switch (config->compositor) {
-        case COMP_HYPRLAND : {
-            cmd = mp_string_new(g_alloc, hyprland_active_monitor);
-        } break;
-        case COMP_SWAY : {
-            cmd = mp_string_new(g_alloc, sway_active_monitor);
-        } break;
-        case COMP_NONE : {
-            config->output_name = NULL;
-            return true;
-        } break;
-        case COMP_COUNT : {
-            assert(0 && "unreachable");
-        } break;
-    }
+    char *output_name = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
+    assert(g_config->compositor != COMP_COUNT);
+    const char *cmd = comp_active_monitor_cmds[g_config->compositor];
 
-    ssize_t bytes = run_cmd(cmd.cstr, output_name, DEFAULT_OUTPUT_SIZE);
-    if (bytes == -1 || output_name == NULL) {
-        eprintf("Failed to get information about current monitor\n");
-        return false;
+    if (cmd != NULL) {
+        ssize_t bytes = run_cmd(cmd, output_name, DEFAULT_OUTPUT_SIZE);
+        if (bytes == -1 || output_name == NULL) {
+            eprintf("Failed to get information about current monitor\n");
+            return false;
+        }
+        output_name[bytes - 1] = '\0';    // trim the final newline
+        config->output_name    = output_name;
+    } else {
+        config->output_name = NULL;
     }
-    output_name[bytes - 1] = '\0';    // trim the final newline
-    config->output_name    = output_name;
 
     return true;
 }

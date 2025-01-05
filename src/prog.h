@@ -1,6 +1,7 @@
 #ifndef PROG_H
 #define PROG_H
 
+#include "compositors.h"
 #include "memplus.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -16,13 +17,6 @@ typedef enum {
     MODE_CUSTOM,
     MODE_TEST,
 } Mode;
-
-typedef enum {
-    COMP_NONE,
-    COMP_HYPRLAND,
-    COMP_SWAY,
-    COMP_COUNT,
-} Compositor;
 
 typedef enum {
     IMGTYPE_PNG,
@@ -45,7 +39,6 @@ typedef struct {
     const char *last_region_file;
     const char *region;
     Compositor  compositor;
-    bool        compositor_supported;
     Mode        mode;
     uint32_t    save_mode;    // bitmask of `SaveMode`
 
@@ -67,7 +60,5 @@ extern const Config *g_config;
 
 int  parse_args(int argc, char *argv[], Config *config);
 void config_init(Config *config);
-// TODO: check if compositor supports needed wayland protocols
-void print_comp_support(bool supported);
 
 #endif /* ifndef PROG_H */

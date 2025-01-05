@@ -1,9 +1,8 @@
 src = files(
   './capture.c',
+  './compositors.c',
   './grim.c',
-  './hyprland.c',
   './main.c',
   './prog.c',
-  './sway.c',
   './utils.c',
 )

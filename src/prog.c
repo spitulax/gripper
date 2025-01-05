@@ -1,4 +1,5 @@
 #include "prog.h"
+#include "compositors.h"
 #include "utils.h"
 #include <math.h>
 #include <stdio.h>
@@ -25,16 +26,6 @@ bool parse_mode_args(size_t *i, int argc, char *argv[], Config *config) {
     }
 
     return true;
-}
-
-void print_comp_support(bool supported) {
-    printf("Your compositor is ");
-    printf(supported ? "supported.\n" : "not supported.\n");
-    printf("    Mode `active-window` is unavailable for unsupported compositor and\n");
-    printf("    mode `region` does not have snap to window.\n");
-    printf("    Mode `full` is also unable to pick current output automatically.\n");
-    printf("    You must specify it yourself with `-o` or it will capture all outputs\n");
-    printf("    which is the behaviour of `--all`.\n");
 }
 
 void check_requirements(void) {
@@ -122,7 +113,7 @@ int parse_args(int argc, char *argv[], Config *config) {
                 printf("%s %s\n", config->prog_name, config->prog_version);
                 return 1;
             } else if (strcmp(argv[1], "--check") == 0) {
-                print_comp_support(config->compositor_supported);
+                comp_print_support(config->compositor);
                 check_requirements();
                 return 1;
             }
@@ -216,12 +207,11 @@ int parse_args(int argc, char *argv[], Config *config) {
 }
 
 void config_init(Config *config) {
-    config->compositor           = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
-    config->compositor_supported = config->compositor != COMP_NONE;
-    config->imgtype              = IMGTYPE_PNG;
-    config->png_level            = DEFAULT_PNG_LEVEL;
-    config->jpeg_quality         = DEFAULT_JPEG_QUALITY;
-    config->save_mode            = SAVEMODE_DISK | SAVEMODE_CLIPBOARD;
-    config->scale                = 1.0;
-    config->wait_time            = 0;
+    config->compositor   = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
+    config->imgtype      = IMGTYPE_PNG;
+    config->png_level    = DEFAULT_PNG_LEVEL;
+    config->jpeg_quality = DEFAULT_JPEG_QUALITY;
+    config->save_mode    = SAVEMODE_DISK | SAVEMODE_CLIPBOARD;
+    config->scale        = 1.0;
+    config->wait_time    = 0;
 }

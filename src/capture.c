@@ -1,9 +1,8 @@
 #include "capture.h"
+#include "compositors.h"
 #include "grim.h"
-#include "hyprland.h"
 #include "memplus.h"
 #include "prog.h"
-#include "sway.h"
 #include "unistd.h"
 #include "utils.h"
 #include <assert.h>
@@ -52,36 +51,27 @@ bool capture_region(void) {
     char *region = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
 
     if (g_config->verbose) {
-        if (g_config->compositor_supported) {
+        if (comp_supported(g_config->compositor)) {
             printf("Snap selection to windows is enabled\n");
         } else {
             printf("Snap selection to windows is disabled\n");
         }
     }
 
-    mp_String cmd = { 0 };
     // TODO: costumize colors option?
+    // TODO: Move colours to macro
     const char *slurp_cmd = "slurp -d -b '#101020aa' -c '#cdd6f4aa' -B '#31324450'";
-    switch (g_config->compositor) {
-        // FIXME: when you switch workspace while on slurp
-        // selection still snaps onto the position of windows in initial workspace
-        case COMP_HYPRLAND : {
-            cmd = mp_string_new(g_alloc, hyprland_windows);
-        } break;
-        case COMP_SWAY : {
-            cmd = mp_string_new(g_alloc, sway_windows);
-        } break;
-        case COMP_NONE : {
-            cmd = mp_string_new(g_alloc, "slurp");
-        } break;
-        case COMP_COUNT : {
-            assert(0 && "unreachable");
-        }
+    assert(g_config->compositor != COMP_COUNT);
+    const char *windows_cmd = mp_string_new(g_alloc, comp_windows_cmds[g_config->compositor]).cstr;
+
+    const char *cmd;
+    if (windows_cmd != NULL) {
+        cmd = mp_string_newf(g_alloc, "%s | %s", windows_cmd, slurp_cmd).cstr;
+    } else {
+        cmd = mp_string_newf(g_alloc, "%s", slurp_cmd).cstr;
     }
 
-    cmd = mp_string_newf(g_alloc, "%s | %s", cmd.cstr, slurp_cmd);
-
-    ssize_t bytes = run_cmd(cmd.cstr, region, DEFAULT_OUTPUT_SIZE);
+    ssize_t bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
         eprintf("Selection cancelled\n");
         return false;
@@ -134,33 +124,15 @@ defer:
 }
 
 bool capture_active_window(void) {
-    if (!g_config->compositor_supported) {
-        print_comp_support(g_config->compositor_supported);
-        return false;
-    }
+    comp_check_support(g_config->compositor, false);
 
     if (g_config->verbose) printf("*Capturing active window*\n");
 
     char *region = mp_allocator_alloc(g_alloc, DEFAULT_OUTPUT_SIZE);
 
-    mp_String cmd = { 0 };
-    switch (g_config->compositor) {
-        case COMP_HYPRLAND : {
-            cmd = mp_string_new(g_alloc, hyprland_active_window);
-        } break;
-        case COMP_SWAY : {
-            cmd = mp_string_new(g_alloc, sway_active_window);
-        } break;
-        case COMP_NONE : {
-            print_comp_support(g_config->compositor_supported);
-            return false;
-        }
-        case COMP_COUNT : {
-            assert(0 && "unreachable");
-        }
-    }
-
-    ssize_t bytes = run_cmd(cmd.cstr, region, DEFAULT_OUTPUT_SIZE);
+    assert(!(g_config->compositor == COMP_NONE || g_config->compositor == COMP_COUNT));
+    const char *cmd   = comp_active_window_cmds[g_config->compositor];
+    ssize_t     bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
     if (bytes == -1 || region == NULL) {
         eprintf("Failed to get information about window position\n");
         return false;
@@ -226,6 +198,7 @@ bool capture(void) {
 
     if (g_config->wait_time > 0) {
         if (g_config->verbose) printf("*Waiting for %d seconds...*\n", g_config->wait_time);
+        // FIXME: Wait after warning user if gripper will override the output file
         sleep(g_config->wait_time);
     }
 
