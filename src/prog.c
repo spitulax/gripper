@@ -80,11 +80,14 @@ void usage(void) {
     printf("    -d <dir>            Where the screenshot is saved (defaults to environment\n");
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots).\n");
     printf("    -f <path>           Where the screenshot is saved to (overrides -d).\n");
+    printf("                        The extension must be a valid type as described below.\n");
+    printf("    -t <type>           The image type. Defaults to png.\n");
+    printf("                        Valid types: ");
+    print_valid_imgtypes();
     printf("    -o <output>         The output/monitor name to capture.\n");
     printf("                        Ignored outside of mode `full`.\n");
     printf("    -w <sec>            Wait for given seconds before capturing.\n");
     printf("    -s <factor>         Scale the final image.\n");
-    printf("    -t <png|ppm|jpeg>   The image type. Defaults to png.\n");
     printf("    --png-level <n>     PNG compression level from 0 to 9.\n");
     printf("                        Defaults to 6 (for -t png, ignored elsewhere).\n");
     printf("    --jpeg-quality <n>  JPEG quality from 0 to 100.\n");
@@ -97,6 +100,11 @@ void usage(void) {
     printf("    --verbose           Print extra output.\n");
 }
 
+void post_parse_args(Config *config) {
+    imgtype_remap(config);
+}
+
+// FIXME: Move to an enum
 // 0 - arguments passed incorrectly
 // 1 - arguments passed correctly and immediately end the program
 // 2 - arguments passed correctly and proceed
@@ -141,16 +149,10 @@ int parse_args(int argc, char *argv[], Config *config) {
         } else if (strcmp(argv[i], "--no-save") == 0) {
             config->save_mode = SAVEMODE_NONE;
         } else if (strcmp(argv[i], "-t") == 0) {
-            // TODO: detect filetype if -f is supplied
             if (i + 1 >= (size_t)argc) break;
             const char *type = argv[++i];
-            if (strcmp(type, "png") == 0) {
-                config->imgtype = IMGTYPE_PNG;
-            } else if (strcmp(type, "ppm") == 0) {
-                config->imgtype = IMGTYPE_PPM;
-            } else if (strcmp(type, "jpeg") == 0) {
-                config->imgtype = IMGTYPE_JPEG;
-            } else {
+            config->imgtype  = str2imgtype(type);
+            if (config->imgtype == IMGTYPE_NONE) {
                 eprintf("Invalid file type `%s`\n", type);
                 return 0;
             }
@@ -171,6 +173,12 @@ int parse_args(int argc, char *argv[], Config *config) {
         } else if (strcmp(argv[i], "-f") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->output_path = argv[++i];
+            const char *type    = file_ext(config->output_path);
+            config->imgtype     = str2imgtype(type);
+            if (config->imgtype == IMGTYPE_NONE) {
+                eprintf("Invalid file type `%s`\n", type);
+                return 0;
+            }
         } else if (strcmp(argv[i], "-s") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->scale = strtod(argv[++i], NULL);
@@ -200,6 +208,7 @@ int parse_args(int argc, char *argv[], Config *config) {
 #endif
 
     if (i == (size_t)argc) {
+        post_parse_args(config);
         return 2;
     } else {
         return 0;

@@ -19,9 +19,12 @@ typedef enum {
 } Mode;
 
 typedef enum {
+    IMGTYPE_NONE,
     IMGTYPE_PNG,
     IMGTYPE_PPM,
     IMGTYPE_JPEG,
+    IMGTYPE_JPG,
+    IMGTYPE_COUNT,
 } Imgtype;
 
 typedef enum {

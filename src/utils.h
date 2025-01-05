@@ -29,6 +29,8 @@ const char *compositor2str(Compositor compositor);
 
 const char *imgtype2str(Imgtype imgtype);
 
+void imgtype_remap(Config *config);
+
 void set_output_path(Config *config);
 
 bool set_current_output_name(Config *config);
@@ -45,10 +47,16 @@ const char *savemode2str(SaveMode save_mode);
 
 Compositor str2compositor(const char *str);
 
+Imgtype str2imgtype(const char *str);
+
 void usage(void);
 
 bool verify_geometry(const char *geometry);
 
 bool make_dir(const char *path);
+
+const char *file_ext(const char *path);
+
+void print_valid_imgtypes(void);
 
 #endif /* ifndef UTILS_H */

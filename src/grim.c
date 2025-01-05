@@ -48,10 +48,15 @@ bool grim(const char *region) {
             case IMGTYPE_PNG : {
                 options = alloc_strf("%s -l %d", options.cstr, g_config->png_level);
             } break;
+            case IMGTYPE_JPG :
             case IMGTYPE_JPEG : {
                 options = alloc_strf("%s -q %d", options.cstr, g_config->jpeg_quality);
             } break;
-            case IMGTYPE_PPM : break;
+            case IMGTYPE_PPM :   break;
+            case IMGTYPE_NONE :
+            case IMGTYPE_COUNT : {
+                assert(0 && "unreachable");
+            }
         }
     }
     if (g_config->cursor) options = alloc_strf("%s -c", options.cstr);

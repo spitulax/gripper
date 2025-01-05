@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +16,7 @@
 #include <time.h>
 #include <unistd.h>
 
-static const char *compositor_name[] = {
+static const char *compositor_name[COMP_COUNT] = {
     [COMP_NONE]     = "Not supported",
     [COMP_HYPRLAND] = "Hyprland",
     [COMP_SWAY]     = "sway",
@@ -30,10 +31,12 @@ static const char *mode_name[] = {
     [MODE_TEST]          = "Test",
 };
 
-static const char *imgtype_name[] = {
-    [IMGTYPE_PNG]  = "png",
-    [IMGTYPE_PPM]  = "ppm",
-    [IMGTYPE_JPEG] = "jpeg",
+static const char *imgtype_name[IMGTYPE_COUNT] = {
+    [IMGTYPE_NONE] = NULL,      //
+    [IMGTYPE_PNG]  = "png",     //
+    [IMGTYPE_PPM]  = "ppm",     //
+    [IMGTYPE_JPEG] = "jpeg",    //
+    [IMGTYPE_JPG]  = "jpg",     //
 };
 
 static const char *savemode_name[] = {
@@ -51,11 +54,19 @@ bool command_found(const char *command) {
 }
 
 const char *compositor2str(Compositor compositor) {
+    assert(compositor != COMP_COUNT);
     return compositor_name[compositor];
 }
 
 const char *imgtype2str(Imgtype imgtype) {
+    // `Imgtype` is different from `Compositor` that it shouldn't be unknown
+    assert(!(imgtype == IMGTYPE_COUNT || imgtype == IMGTYPE_NONE));
     return imgtype_name[imgtype];
+}
+
+void imgtype_remap(Config *config) {
+    // grim only accepts `jpeg`
+    if (config->imgtype == IMGTYPE_JPG) config->imgtype = IMGTYPE_JPEG;
 }
 
 void set_output_path(Config *config) {
@@ -158,6 +169,13 @@ Compositor str2compositor(const char *str) {
     return COMP_NONE;
 }
 
+Imgtype str2imgtype(const char *str) {
+    for (uint32_t i = 1; i < IMGTYPE_COUNT; ++i) {
+        if (strcmp(str, imgtype_name[i]) == 0) return i;
+    }
+    return IMGTYPE_NONE;
+}
+
 bool verify_geometry(const char *geometry) {
     char *cmd = alloc_strf("grim -t jpeg -q 0 -g '%s' - >/dev/null", geometry).cstr;
     if (run_cmd(cmd, NULL, 0) == -1) {
@@ -203,4 +221,18 @@ bool set_current_output_name(Config *config) {
     }
 
     return true;
+}
+
+const char *file_ext(const char *path) {
+    const char *dot_ptr = strrchr(path, '.');
+    if (dot_ptr == NULL) return "";
+    return dot_ptr + 1;
+}
+
+void print_valid_imgtypes(void) {
+    for (uint32_t i = 1; i < IMGTYPE_COUNT; ++i) {
+        if (i > 1) printf(", ");
+        printf("%s", imgtype_name[i]);
+    }
+    printf("\n");
 }

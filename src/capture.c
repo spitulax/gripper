@@ -190,10 +190,15 @@ bool capture(void) {
             case IMGTYPE_PNG : {
                 printf("PNG compression level   : %d\n", g_config->png_level);
             } break;
+            case IMGTYPE_JPG :
             case IMGTYPE_JPEG : {
                 printf("JPEG quality:           : %d\n", g_config->jpeg_quality);
             } break;
-            case IMGTYPE_PPM : break;
+            case IMGTYPE_PPM :   break;
+            case IMGTYPE_NONE :
+            case IMGTYPE_COUNT : {
+                assert(0 && "unreachable");
+            }
         }
         printf("====================\n");
     }
