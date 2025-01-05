@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-01-05
+
+### Added
+
+- Detect image format from file extension with `-f` flag.
+
+### Fixed
+
+- Fix program not exiting correctly if the given output (`-o` flag) is unknown.
+- Fix program trying to screenshot in `active-window` mode if there's no active window.
+- Wait (`-w` flag) directly before executing grim.
+
 ## [1.0.2] - 2025-01-01
 
 ### Fixed
@@ -28,7 +40,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release.
 
-[Unreleased]: https://github.com/spitulax/gripper/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/spitulax/gripper/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/spitulax/gripper/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/spitulax/gripper/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/spitulax/gripper/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/spitulax/gripper/releases/tag/v1.0.0
