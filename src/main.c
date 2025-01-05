@@ -40,15 +40,14 @@ int main(int argc, char *argv[]) {
     g_alloc = &alloc;
 
     config_init(&config);
-    int parse_result = parse_args(argc, argv, &config);
+    ParseArgsResult parse_result = parse_args(argc, argv, &config);
     switch (parse_result) {
-        case 2 : break;
-        case 1 : return_defer(EXIT_SUCCESS);
-        case 0 : {
+        case PARSE_ARGS_RESULT_OK :        break;
+        case PARSE_ARGS_RESULT_TERMINATE : return_defer(EXIT_SUCCESS);
+        case PARSE_ARGS_RESULT_FAILED :    {
             usage();
             return_defer(EXIT_FAILURE);
         }
-        default : unreachable();
     }
 
     const char *home_dir = getenv("HOME");

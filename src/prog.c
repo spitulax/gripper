@@ -104,26 +104,26 @@ void post_parse_args(Config *config) {
     imgtype_remap(config);
 }
 
-// FIXME: Move to an enum
-// 0 - arguments passed incorrectly
-// 1 - arguments passed correctly and immediately end the program
-// 2 - arguments passed correctly and proceed
-int parse_args(int argc, char *argv[], Config *config) {
-    if (argc < 2) return 0;
+ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
+#define FAILED    PARSE_ARGS_RESULT_FAILED
+#define TERMINATE PARSE_ARGS_RESULT_TERMINATE
+#define OK        PARSE_ARGS_RESULT_OK
+
+    if (argc < 2) return FAILED;
 
     size_t i = 1;
     for (; i < (size_t)argc; ++i) {
         if (i == 1) {
             if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
                 usage();
-                return 1;
+                return TERMINATE;
             } else if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
                 printf("%s %s\n", config->prog_name, config->prog_version);
-                return 1;
+                return TERMINATE;
             } else if (strcmp(argv[1], "--check") == 0) {
                 comp_print_support(config->compositor);
                 check_requirements();
-                return 1;
+                return TERMINATE;
             }
             if (!parse_mode_args(&i, argc, argv, config)) break;
         } else if (strcmp(argv[i], "--verbose") == 0) {
@@ -154,21 +154,21 @@ int parse_args(int argc, char *argv[], Config *config) {
             config->imgtype  = str2imgtype(type);
             if (config->imgtype == IMGTYPE_NONE) {
                 eprintf("Invalid file type `%s`\n", type);
-                return 0;
+                return FAILED;
             }
         } else if (strcmp(argv[i], "--png-level") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->png_level = atoui(argv[++i]);
             if (config->png_level < 0 || config->png_level > 9) {
                 eprintf("Input a number between 0-9\n");
-                return 0;
+                return FAILED;
             }
         } else if (strcmp(argv[i], "--jpeg-quality") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->jpeg_quality = atoui(argv[++i]);
             if (config->jpeg_quality < 0 || config->jpeg_quality > 100) {
                 eprintf("Input a number between 0-100\n");
-                return 0;
+                return FAILED;
             }
         } else if (strcmp(argv[i], "-f") == 0) {
             if (i + 1 >= (size_t)argc) break;
@@ -177,42 +177,46 @@ int parse_args(int argc, char *argv[], Config *config) {
             config->imgtype     = str2imgtype(type);
             if (config->imgtype == IMGTYPE_NONE) {
                 eprintf("Invalid file type `%s`\n", type);
-                return 0;
+                return FAILED;
             }
         } else if (strcmp(argv[i], "-s") == 0) {
             if (i + 1 >= (size_t)argc) break;
             config->scale = strtod(argv[++i], NULL);
             if (config->scale <= 0) {
                 eprintf("Input a number greater than 0\n");
-                return 0;
+                return FAILED;
             } else if (config->scale == HUGE_VAL) {
                 eprintf("Input number overflew\n");
-                return 0;
+                return FAILED;
             }
         } else if (strcmp(argv[i], "-w") == 0) {
             if (i + 1 >= (size_t)argc) break;
             int wait_time = atoui(argv[++i]);
             if (wait_time < 0) {
                 eprintf("Input a positive number\n");
-                return 0;
+                return FAILED;
             } else {
                 config->wait_time = (uint32_t)wait_time;
             }
         } else {
-            return 0;
+            return FAILED;
         }
     }
 
 #ifndef DEBUG
-    if (config->mode == MODE_TEST) return 0;
+    if (config->mode == MODE_TEST) return FAILED;
 #endif
 
     if (i == (size_t)argc) {
         post_parse_args(config);
-        return 2;
+        return OK;
     } else {
-        return 0;
+        return FAILED;
     }
+
+#undef FAILED
+#undef TERMINATE
+#undef OK
 }
 
 void config_init(Config *config) {

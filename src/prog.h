@@ -61,7 +61,13 @@ typedef struct {
 extern mp_Allocator *g_alloc;
 extern const Config *g_config;
 
-int  parse_args(int argc, char *argv[], Config *config);
-void config_init(Config *config);
+typedef enum {
+    PARSE_ARGS_RESULT_FAILED,
+    PARSE_ARGS_RESULT_TERMINATE,
+    PARSE_ARGS_RESULT_OK,
+} ParseArgsResult;
+
+ParseArgsResult parse_args(int argc, char *argv[], Config *config);
+void            config_init(Config *config);
 
 #endif /* ifndef PROG_H */
