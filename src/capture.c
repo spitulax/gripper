@@ -6,6 +6,7 @@
 #include "unistd.h"
 #include "utils.h"
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -132,7 +133,9 @@ bool capture_active_window(void) {
     assert(!(g_config->compositor == COMP_NONE || g_config->compositor == COMP_COUNT));
     const char *cmd   = comp_active_window_cmds[g_config->compositor];
     ssize_t     bytes = run_cmd(cmd, region, DEFAULT_OUTPUT_SIZE);
-    if (bytes == -1 || region == NULL) {
+    // NOTE: If no active window, the output will probably be "null,null nullxnull"
+    // which will fail the third check
+    if (bytes == -1 || region == NULL || !isdigit((int)region[0])) {
         eprintf("Failed to get information about window position\n");
         return false;
     }

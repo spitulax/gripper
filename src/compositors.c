@@ -9,7 +9,6 @@ const char *comp_active_monitor_cmds[COMP_COUNT] = {
 };
 
 // Commands to get the region of the active window
-// FIXME: If no active window, this will fail
 const char *comp_active_window_cmds[COMP_COUNT] = {
     [COMP_NONE] = NULL,
     [COMP_HYPRLAND] =
@@ -21,9 +20,9 @@ const char *comp_active_window_cmds[COMP_COUNT] = {
 };
 
 // Commands to get the region of all visible windows
-// FIXME: Hyprland: this includes hidden windows
 const char *comp_windows_cmds[COMP_COUNT] = {
     [COMP_NONE] = NULL,
+    // FIXME: this includes windows hidden by a fullscreen window
     [COMP_HYPRLAND] =
         /**/
     // lists windows in Hyprland
