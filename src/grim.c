@@ -55,7 +55,7 @@ bool grim(const char *region) {
             case IMGTYPE_PPM :   break;
             case IMGTYPE_NONE :
             case IMGTYPE_COUNT : {
-                assert(0 && "unreachable");
+                unreachable();
             }
         }
     }

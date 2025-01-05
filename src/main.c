@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
             usage();
             return_defer(EXIT_FAILURE);
         }
-        default : assert(0 && "unreachable");
+        default : unreachable();
     }
 
     const char *home_dir = getenv("HOME");

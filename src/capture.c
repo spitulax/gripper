@@ -197,7 +197,7 @@ bool capture(void) {
             case IMGTYPE_PPM :   break;
             case IMGTYPE_NONE :
             case IMGTYPE_COUNT : {
-                assert(0 && "unreachable");
+                unreachable();
             }
         }
         printf("====================\n");

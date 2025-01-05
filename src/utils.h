@@ -21,6 +21,8 @@
 
 #define alloc_strf(fmt, ...) mp_string_newf(g_alloc, fmt, __VA_ARGS__)
 
+#define unreachable() assert(0 && "unreachable")
+
 #define DEFAULT_OUTPUT_SIZE 1024
 
 bool command_found(const char *command);
