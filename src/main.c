@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
             mp_string_newf(g_alloc, "grim -t jpeg -q 0 -o %s - >/dev/null", config.output_name);
         if (run_cmd(cmd.cstr, NULL, 0) == -1) {
             eprintf("Unknown output `%s`\n", config.output_name);
-            return false;
+            return_defer(EXIT_FAILURE);
         }
     } else if (config.mode == MODE_FULL && !config.all_outputs) {
         if (!set_current_output_name(&config)) return false;
