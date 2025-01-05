@@ -4,7 +4,7 @@
 , slurp
 , wl-clipboard
 , libnotify
-, makeWrapper
+, makeBinaryWrapper
 , meson
 , ninja
 , pkg-config
@@ -24,7 +24,7 @@ stdenv.mkDerivation rec {
     meson
     ninja
     pkg-config
-    makeWrapper
+    makeBinaryWrapper
   ];
 
   mesonBuildType = if debug then "debug" else "release";
