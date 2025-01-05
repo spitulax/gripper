@@ -58,9 +58,8 @@ bool capture_region(void) {
         }
     }
 
-    // TODO: costumize colors option?
-    // TODO: Move colours to macro
-    const char *slurp_cmd = "slurp -d -b '#101020aa' -c '#cdd6f4aa' -B '#31324450'";
+    const char *slurp_cmd = "slurp -d -b '" SLURP_BG_COLOUR "' -c '" SLURP_BORDER_COLOUR
+                            "' -B '" SLURP_OPTION_BOX_COLOUR "' -s '" SLURP_SELECTION_COLOUR "'";
     assert(g_config->compositor != COMP_COUNT);
     const char *windows_cmd = mp_string_new(g_alloc, comp_windows_cmds[g_config->compositor]).cstr;
 
