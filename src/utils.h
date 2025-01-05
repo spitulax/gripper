@@ -40,8 +40,8 @@ bool set_current_output_name(Config *config);
 const char *mode2str(Mode mode);
 
 // Returns the amounts of bytes written to `buf`
-// If failed returns -1 and set `buf` to NULL
-// Set `buf` to NULL to discard the output altogether
+// If failed returns -1 and sets `buf` to NULL
+// Sets `buf` to NULL to discard the output altogether
 //    In this case it returns 0 on success, returns -1 on failure
 ssize_t run_cmd(const char *cmd, char *buf, size_t nbytes);
 

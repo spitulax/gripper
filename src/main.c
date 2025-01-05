@@ -27,7 +27,7 @@ static Config       config;
 int main(int argc, char *argv[]) {
     mp_Arena arena  = mp_arena_new();
     int      result = EXIT_SUCCESS;
-    // variables that will be freed after defer must be initialized before any call to return_defer
+    // Variables that will be freed after defer must be initialised before any call to return_defer
     char *alt_dir               = NULL;
     char *last_region_file_path = NULL;
 

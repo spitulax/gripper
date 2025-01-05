@@ -28,7 +28,7 @@ bool cache_region(char *region, ssize_t nbytes) {
         return_defer(false);
     }
     // bring back the newline before writing the region to the file
-    // because some editors automatically inserts newline to the file when you save it
+    // because some editors automatically insert newline to the file when you save it
     region[nbytes - 1] = '\n';
     if (fputs(region, region_cache_file) < 0) {
         eprintf("Failed to write to %s\n", g_config->last_region_file);
@@ -164,7 +164,7 @@ bool capture(void) {
 
     if (g_config->mode != MODE_FULL && (g_config->output_name != NULL || g_config->all_outputs)) {
         eprintf("\033[1;33m");
-        eprintf("Warning: Flag -o and --all is ignored outside of mode `full`\n");
+        eprintf("Warning: Flag -o and --all are ignored outside of mode `full`\n");
         eprintf("\033[0m");
     }
 

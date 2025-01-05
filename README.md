@@ -7,8 +7,8 @@ Gripper is an alternative to [grimblast](https://github.com/hyprwm/contrib/blob/
 Hyprland and Sway.
 
 Gripper runs [grim](https://sr.ht/~emersion/grim/) under the hood, but makes it easier to use by
-providing "alias" of common operations that are often compositor-specific. Also copies captured
-image to clipboard and sends notification on completion by default.
+providing "aliases" or shortcuts of common operations that are often compositor-specific. Also
+copies captured image to clipboard and sends notification on completion by default.
 
 ## Modes
 
@@ -75,5 +75,5 @@ $ nix build
 $ ./result/bin/gripper --help
 ```
 
-All the required programs should be available to the program but check if your notification daemon
+All the required programs should be available to Gripper but check if your notification daemon
 supports sending notification through `notify-send`.

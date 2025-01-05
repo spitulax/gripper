@@ -21,7 +21,7 @@ bool notify(void) {
     }
 
     // TODO: maybe print the region?
-    // TODO: add actions to the notification that maybe brings an option to view/edit the image
+    // TODO: add an action to the notification that maybe brings an option to view/edit the image
     char *cmd = alloc_strf("notify-send -t 3000 -a Gripper 'Screenshot taken (%s)' 'Saved to %s'",
                            mode2str(g_config->mode),
                            name)
