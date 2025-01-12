@@ -234,3 +234,24 @@ void print_valid_imgtypes(FILE *stream, bool newline) {
     }
     if (newline) fprintf(stream, "\n");
 }
+
+bool containing_dir_exists(const char *path) {
+    const char *slash_ptr = strrchr(path, '/');
+    // NOTE: if containing dir is current dir, assume that it exists
+    if (slash_ptr == NULL) return true;
+    size_t slash_idx      = (size_t)(slash_ptr - path);
+    char  *containing_dir = mp_allocator_alloc(g_alloc, slash_idx + 1);
+    memcpy(containing_dir, path, slash_idx);
+    containing_dir[slash_idx] = '\0';
+
+    struct stat s;
+    if (stat(containing_dir, &s) != 0) {
+        eprintf("Directory \"%s\" does not exist\n", containing_dir);
+        return false;
+    } else if (!S_ISDIR(s.st_mode)) {
+        eprintf("\"%s\" already exists but it is not a directory\n", containing_dir);
+        return false;
+    }
+
+    return true;
+}

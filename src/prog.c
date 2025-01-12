@@ -223,6 +223,7 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
                 eprintf("-f: Unspecified path\n");
                 return FAILED;
             }
+            if (!containing_dir_exists(config->output_path)) return FAILED;
             const char *type = file_ext(config->output_path);
             if ((config->imgtype = str2imgtype(type)) == IMGTYPE_NONE) {
                 if (*type == '\0')

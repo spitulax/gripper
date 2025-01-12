@@ -64,4 +64,6 @@ const char *file_ext(const char *path);
 
 void print_valid_imgtypes(FILE *stream, bool newline);
 
+bool containing_dir_exists(const char *path);
+
 #endif /* ifndef UTILS_H */

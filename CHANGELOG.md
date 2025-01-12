@@ -11,6 +11,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Fix unable to pass name to `-d` and `-f` with spaces.
 - Improve argument parsing and error reporting.
+- Fix program not exiting correctly when passing path with subdirectories to `-f`.
 
 ## [1.1.0] - 2025-01-05
 
