@@ -164,14 +164,14 @@ const char *savemode2str(SaveMode save_mode) {
 
 Compositor str2compositor(const char *str) {
     for (uint32_t i = 0; i < COMP_COUNT; ++i) {
-        if (strcmp(str, compositor_name[i]) == 0) return i;
+        if (streq(str, compositor_name[i])) return i;
     }
     return COMP_NONE;
 }
 
 Imgtype str2imgtype(const char *str) {
     for (uint32_t i = 1; i < IMGTYPE_COUNT; ++i) {
-        if (strcmp(str, imgtype_name[i]) == 0) return i;
+        if (streq(str, imgtype_name[i])) return i;
     }
     return IMGTYPE_NONE;
 }

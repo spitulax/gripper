@@ -4,6 +4,7 @@
 #include "prog.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 
 #define return_defer(v)                                                                            \
@@ -22,6 +23,8 @@
 #define alloc_strf(fmt, ...) mp_string_newf(g_alloc, fmt, __VA_ARGS__)
 
 #define unreachable() assert(0 && "unreachable")
+
+#define streq(str1, str2) (strcmp(str1, str2) == 0)
 
 #define DEFAULT_OUTPUT_SIZE 1024
 
