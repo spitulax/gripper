@@ -83,7 +83,7 @@ void usage(void) {
     printf("                        The extension must be a valid type as described below.\n");
     printf("    -t <type>           The image type. Defaults to png.\n");
     printf("                        Valid types: ");
-    print_valid_imgtypes();
+    print_valid_imgtypes(stdout, true);
     printf("    -o <output>         The output/monitor name to capture.\n");
     printf("                        Ignored outside of mode `full`.\n");
     printf("    -w <sec>            Wait for given seconds before capturing.\n");

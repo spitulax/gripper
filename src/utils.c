@@ -230,10 +230,10 @@ const char *file_ext(const char *path) {
     return dot_ptr + 1;
 }
 
-void print_valid_imgtypes(void) {
+void print_valid_imgtypes(FILE *stream, bool newline) {
     for (uint32_t i = 1; i < IMGTYPE_COUNT; ++i) {
-        if (i > 1) printf(", ");
-        printf("%s", imgtype_name[i]);
+        if (i > 1) fprintf(stream, ", ");
+        fprintf(stream, "%s", imgtype_name[i]);
     }
-    printf("\n");
+    if (newline) fprintf(stream, "\n");
 }

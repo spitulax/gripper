@@ -62,6 +62,6 @@ bool make_dir(const char *path);
 
 const char *file_ext(const char *path);
 
-void print_valid_imgtypes(void);
+void print_valid_imgtypes(FILE *stream, bool newline);
 
 #endif /* ifndef UTILS_H */
