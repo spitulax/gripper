@@ -5,29 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 
-bool parse_mode_args(size_t *i, int argc, char *argv[], Config *config) {
-    const char *arg = argv[*i];
-    if (strcmp(arg, "full") == 0) {
-        config->mode = MODE_FULL;
-    } else if (strcmp(arg, "region") == 0) {
-        config->mode = MODE_REGION;
-    } else if (strcmp(arg, "last-region") == 0) {
-        config->mode = MODE_LAST_REGION;
-    } else if (strcmp(arg, "active-window") == 0) {
-        config->mode = MODE_ACTIVE_WINDOW;
-    } else if (strcmp(arg, "custom") == 0) {
-        if (*i + 1 >= (size_t)argc) return false;
-        config->mode   = MODE_CUSTOM;
-        config->region = argv[++*i];
-    } else if (strcmp(arg, "test") == 0) {
-        config->mode = MODE_TEST;
-    } else {
-        return false;
-    }
-
-    return true;
-}
-
 void check_requirements(void) {
     const char *cmds[] = {
         "grim",
@@ -100,6 +77,39 @@ void usage(void) {
     printf("    --verbose           Print extra output.\n");
 }
 
+const char *next_arg(char ***it) {
+    if (**it == NULL) return NULL;
+    return *((*it)++);
+}
+
+bool parse_mode_args(char ***it, Config *config) {
+    const char *arg = *(*it - 1);
+    if (strcmp(arg, "full") == 0) {
+        config->mode = MODE_FULL;
+    } else if (strcmp(arg, "region") == 0) {
+        config->mode = MODE_REGION;
+    } else if (strcmp(arg, "last-region") == 0) {
+        config->mode = MODE_LAST_REGION;
+    } else if (strcmp(arg, "active-window") == 0) {
+        config->mode = MODE_ACTIVE_WINDOW;
+    } else if (strcmp(arg, "custom") == 0) {
+        const char *subarg = next_arg(it);
+        if (subarg == NULL) {
+            eprintf("custom: Unspecified region\n");
+            return false;
+        }
+        config->mode   = MODE_CUSTOM;
+        config->region = subarg;
+    } else if (strcmp(arg, "test") == 0) {
+        config->mode = MODE_TEST;
+    } else {
+        eprintf("Unknown mode: %s\n", arg);
+        return false;
+    }
+
+    return true;
+}
+
 void post_parse_args(Config *config) {
     imgtype_remap(config);
 }
@@ -109,96 +119,149 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
 #define TERMINATE PARSE_ARGS_RESULT_TERMINATE
 #define OK        PARSE_ARGS_RESULT_OK
 
-    if (argc < 2) return FAILED;
+    assert(argv[argc] == NULL);
+    char **it = argv;
+    // The first argument should be present
+    if (next_arg(&it) == NULL) return FAILED;
 
-    size_t i = 1;
-    for (; i < (size_t)argc; ++i) {
-        if (i == 1) {
-            if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-                usage();
-                return TERMINATE;
-            } else if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0) {
-                printf("%s %s\n", config->prog_name, config->prog_version);
-                return TERMINATE;
-            } else if (strcmp(argv[1], "--check") == 0) {
-                comp_print_support(config->compositor);
-                check_requirements();
-                return TERMINATE;
-            }
-            if (!parse_mode_args(&i, argc, argv, config)) break;
-        } else if (strcmp(argv[i], "--verbose") == 0) {
+    const char *mode = next_arg(&it);
+    if (mode == NULL) {
+        eprintf("Unspecified mode\n");
+        return FAILED;
+    }
+
+    if (strcmp(mode, "--help") == 0 || strcmp(mode, "-h") == 0) {
+        usage();
+        return TERMINATE;
+    } else if (strcmp(mode, "--version") == 0 || strcmp(mode, "-v") == 0) {
+        printf("%s %s\n", config->prog_name, config->prog_version);
+        return TERMINATE;
+    } else if (strcmp(mode, "--check") == 0) {
+        comp_print_support(config->compositor);
+        check_requirements();
+        return TERMINATE;
+    }
+    if (!parse_mode_args(&it, config)) return FAILED;
+
+    bool        specified_save_mode = false;
+    const char *arg;
+    while ((arg = next_arg(&it)) != NULL) {
+        if (streq(arg, "--verbose")) {
             config->verbose = true;
-        } else if (strcmp(argv[i], "-c") == 0) {
+        } else if (streq(arg, "-c")) {
             config->cursor = true;
-        } else if (strcmp(argv[i], "-d") == 0) {
-            if (i + 1 >= (size_t)argc) break;
-            config->screenshot_dir = argv[++i];
-        } else if (strcmp(argv[i], "-o") == 0) {
-            if (i + 1 >= (size_t)argc) break;
-            config->output_name = argv[++i];
+        } else if (streq(arg, "-d")) {
+            if ((config->screenshot_dir = next_arg(&it)) == NULL) {
+                eprintf("-d: Unspecified directory\n");
+                return FAILED;
+            }
+        } else if (streq(arg, "-o")) {
+            if ((config->output_name = next_arg(&it)) == NULL) {
+                eprintf("-o: Unspecified output name\n");
+                return FAILED;
+            }
             config->all_outputs = false;
-        } else if (strcmp(argv[i], "--all") == 0) {
+        } else if (streq(arg, "--all")) {
             config->output_name = NULL;
             config->all_outputs = true;
-        } else if (strcmp(argv[i], "--no-save-region") == 0) {
+        } else if (streq(arg, "--no-save-region")) {
             config->no_cache_region = true;
-        } else if (strcmp(argv[i], "--save") == 0) {
-            config->save_mode = SAVEMODE_DISK;
-        } else if (strcmp(argv[i], "--copy") == 0) {
-            config->save_mode = SAVEMODE_CLIPBOARD;
-        } else if (strcmp(argv[i], "--no-save") == 0) {
+        } else if (streq(arg, "--save")) {
+            if (!specified_save_mode) {
+                config->save_mode   = SAVEMODE_DISK;
+                specified_save_mode = true;
+            } else {
+                config->save_mode |= SAVEMODE_DISK;
+            }
+        } else if (streq(arg, "--copy")) {
+            if (!specified_save_mode) {
+                config->save_mode   = SAVEMODE_CLIPBOARD;
+                specified_save_mode = true;
+            } else {
+                config->save_mode |= SAVEMODE_CLIPBOARD;
+            }
+        } else if (streq(arg, "--no-save")) {
             config->save_mode = SAVEMODE_NONE;
-        } else if (strcmp(argv[i], "-t") == 0) {
-            if (i + 1 >= (size_t)argc) break;
-            const char *type = argv[++i];
-            config->imgtype  = str2imgtype(type);
-            if (config->imgtype == IMGTYPE_NONE) {
-                eprintf("Invalid file type `%s`\n", type);
+        } else if (streq(arg, "-t")) {
+            const char *type = next_arg(&it);
+            if (type == NULL) {
+                eprintf("-t: Unspecified file type\n");
+                eprintf("Valid file types: ");
+                print_valid_imgtypes(stderr, true);
                 return FAILED;
             }
-        } else if (strcmp(argv[i], "--png-level") == 0) {
-            if (i + 1 >= (size_t)argc) break;
-            config->png_level = atoui(argv[++i]);
+            if ((config->imgtype = str2imgtype(type)) == IMGTYPE_NONE) {
+                eprintf("-t: Invalid file type: %s\n", type);
+                eprintf("Valid file types: ");
+                print_valid_imgtypes(stderr, true);
+                return FAILED;
+            }
+        } else if (streq(arg, "--png-level")) {
+            const char *level_str = next_arg(&it);
+            if (level_str == NULL) {
+                eprintf("--png-level: Unspecified level\n");
+                return FAILED;
+            }
+            config->png_level = atoui(level_str);
             if (config->png_level < 0 || config->png_level > 9) {
-                eprintf("Input a number between 0-9\n");
+                eprintf("--png-level: Input a number between 0-9\n");
                 return FAILED;
             }
-        } else if (strcmp(argv[i], "--jpeg-quality") == 0) {
-            if (i + 1 >= (size_t)argc) break;
-            config->jpeg_quality = atoui(argv[++i]);
+        } else if (streq(arg, "--jpeg-quality")) {
+            const char *quality_str = next_arg(&it);
+            if (quality_str == NULL) {
+                eprintf("--jpeg-quality: Unspecified quality\n");
+                return FAILED;
+            }
+            config->jpeg_quality = atoui(quality_str);
             if (config->jpeg_quality < 0 || config->jpeg_quality > 100) {
-                eprintf("Input a number between 0-100\n");
+                eprintf("--jpeg-quality: Input a number between 0-100\n");
                 return FAILED;
             }
-        } else if (strcmp(argv[i], "-f") == 0) {
-            if (i + 1 >= (size_t)argc) break;
-            config->output_path = argv[++i];
-            const char *type    = file_ext(config->output_path);
-            config->imgtype     = str2imgtype(type);
-            if (config->imgtype == IMGTYPE_NONE) {
-                eprintf("Invalid file type `%s`\n", type);
+        } else if (streq(arg, "-f")) {
+            if ((config->output_path = next_arg(&it)) == NULL) {
+                eprintf("-f: Unspecified path\n");
                 return FAILED;
             }
-        } else if (strcmp(argv[i], "-s") == 0) {
-            if (i + 1 >= (size_t)argc) break;
-            config->scale = strtod(argv[++i], NULL);
+            const char *type = file_ext(config->output_path);
+            if ((config->imgtype = str2imgtype(type)) == IMGTYPE_NONE) {
+                if (*type == '\0')
+                    eprintf("-f: Unspecified file extension. Add extension to the file name\n");
+                else
+                    eprintf("-f: Invalid file extension: %s\n", type);
+                eprintf("Valid file types/extensions: ");
+                print_valid_imgtypes(stderr, true);
+                return FAILED;
+            }
+        } else if (streq(arg, "-s")) {
+            const char *scale_str = next_arg(&it);
+            if (scale_str == NULL) {
+                eprintf("-s: Unspecified scale\n");
+                return FAILED;
+            }
+            config->scale = strtod(scale_str, NULL);
             if (config->scale <= 0) {
-                eprintf("Input a number greater than 0\n");
+                eprintf("-s: Input a number greater than 0\n");
                 return FAILED;
             } else if (config->scale == HUGE_VAL) {
-                eprintf("Input number overflew\n");
+                eprintf("-s: Input number is too big\n");
                 return FAILED;
             }
-        } else if (strcmp(argv[i], "-w") == 0) {
-            if (i + 1 >= (size_t)argc) break;
-            int wait_time = atoui(argv[++i]);
+        } else if (streq(arg, "-w")) {
+            const char *time_str = next_arg(&it);
+            if (time_str == NULL) {
+                eprintf("-w: Unspecified time\n");
+                return FAILED;
+            }
+            int wait_time = atoui(time_str);
             if (wait_time < 0) {
-                eprintf("Input a positive number\n");
+                eprintf("-w: Input a positive number\n");
                 return FAILED;
             } else {
                 config->wait_time = (uint32_t)wait_time;
             }
         } else {
+            eprintf("Unknown argument: %s\n", arg);
             return FAILED;
         }
     }
@@ -207,12 +270,8 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
     if (config->mode == MODE_TEST) return FAILED;
 #endif
 
-    if (i == (size_t)argc) {
-        post_parse_args(config);
-        return OK;
-    } else {
-        return FAILED;
-    }
+    post_parse_args(config);
+    return OK;
 
 #undef FAILED
 #undef TERMINATE
