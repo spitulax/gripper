@@ -85,7 +85,7 @@ bool grim(const char *region) {
             if (tolower(buf[0]) != 'y') return false;
 #undef BUFLEN
         }
-        cmd = alloc_strf("grim %s - > %s", options.cstr, g_config->output_path).cstr;
+        cmd = alloc_strf("grim %s - > '%s'", options.cstr, g_config->output_path).cstr;
     } else if (g_config->save_mode == SAVEMODE_CLIPBOARD) {
         cmd = alloc_strf("grim %s - | wl-copy", options.cstr).cstr;
     } else if (g_config->save_mode == SAVEMODE_NONE) {
@@ -108,7 +108,7 @@ bool grim(const char *region) {
     notify();
 
     if (g_config->save_mode == (SAVEMODE_DISK | SAVEMODE_CLIPBOARD)) {
-        cmd = alloc_strf("wl-copy < %s", g_config->output_path).cstr;
+        cmd = alloc_strf("wl-copy < '%s'", g_config->output_path).cstr;
 #ifdef DEBUG
         if (g_config->verbose) printf("$ %s\n", cmd);
 #endif

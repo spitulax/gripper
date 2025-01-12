@@ -231,11 +231,11 @@ bool capture(void) {
     if (g_config->save_mode == SAVEMODE_NONE) return true;
     const char *name = NULL;
     if (g_config->save_mode == SAVEMODE_DISK) {
-        name = g_config->output_path;
+        name = alloc_strf("\"%s\"", g_config->output_path).cstr;
     } else if (g_config->save_mode == SAVEMODE_CLIPBOARD) {
         name = "clipboard";
     } else if (g_config->save_mode == (SAVEMODE_DISK | SAVEMODE_CLIPBOARD)) {
-        name = alloc_strf("%s and clipboard", g_config->output_path).cstr;
+        name = alloc_strf("\"%s\" and clipboard", g_config->output_path).cstr;
     }
     printf("Saved to %s\n", name);
 

@@ -188,7 +188,8 @@ bool verify_geometry(const char *geometry) {
 bool make_dir(const char *path) {
     struct stat s;
     if (stat(path, &s) != 0) {
-        char *cmd = mp_string_newf(g_alloc, "mkdir -p %s", path).cstr;
+        // FIXME: use `mkdir(2)`
+        char *cmd = mp_string_newf(g_alloc, "mkdir -p '%s'", path).cstr;
         int   ret = system(cmd);
         if (ret == 0) {
             printf("Created %s\n", path);
