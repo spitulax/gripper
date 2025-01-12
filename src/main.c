@@ -44,10 +44,7 @@ bool start(int argc, char *argv[]) {
     switch (parse_result) {
         case PARSE_ARGS_RESULT_OK :        break;
         case PARSE_ARGS_RESULT_TERMINATE : return_defer(true);
-        case PARSE_ARGS_RESULT_FAILED :    {
-            usage();
-            return_defer(false);
-        }
+        case PARSE_ARGS_RESULT_FAILED :    return_defer(false);
     }
 
     const char *home_dir = getenv("HOME");
