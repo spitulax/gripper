@@ -24,9 +24,9 @@ const Config       *g_config;
 static mp_Allocator alloc;
 static Config       config;
 
-int main(int argc, char *argv[]) {
+bool start(int argc, char *argv[]) {
     mp_Arena arena  = mp_arena_new();
-    int      result = EXIT_SUCCESS;
+    int      result = true;
     // Variables that will be freed after defer must be initialised before any call to return_defer
     char *alt_dir               = NULL;
     char *last_region_file_path = NULL;
@@ -43,10 +43,10 @@ int main(int argc, char *argv[]) {
     ParseArgsResult parse_result = parse_args(argc, argv, &config);
     switch (parse_result) {
         case PARSE_ARGS_RESULT_OK :        break;
-        case PARSE_ARGS_RESULT_TERMINATE : return_defer(EXIT_SUCCESS);
+        case PARSE_ARGS_RESULT_TERMINATE : return_defer(true);
         case PARSE_ARGS_RESULT_FAILED :    {
             usage();
-            return_defer(EXIT_FAILURE);
+            return_defer(false);
         }
     }
 
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Create the directory if it didn't exist
-    if (!make_dir(config.screenshot_dir)) return_defer(EXIT_FAILURE);
+    if (!make_dir(config.screenshot_dir)) return_defer(false);
 
     // Assign config.last_region_file
     config.cache_dir = getenv("XDG_CACHE_HOME");
@@ -82,10 +82,10 @@ int main(int argc, char *argv[]) {
             mp_string_newf(g_alloc, "grim -t jpeg -q 0 -o %s - >/dev/null", config.output_name);
         if (run_cmd(cmd.cstr, NULL, 0) == -1) {
             eprintf("Unknown output `%s`\n", config.output_name);
-            return_defer(EXIT_FAILURE);
+            return_defer(false);
         }
     } else if (config.mode == MODE_FULL && !config.all_outputs) {
-        if (!set_current_output_name(&config)) return false;
+        if (!set_current_output_name(&config)) return_defer(false);
     }
 
     if (config.save_mode & SAVEMODE_DISK) {
@@ -93,9 +93,14 @@ int main(int argc, char *argv[]) {
         assert(config.output_path != NULL);
     }
 
-    if (!capture()) return_defer(EXIT_FAILURE);
+    if (!capture()) return_defer(false);
 
 defer:
     mp_arena_free(&arena);
     return result;
+}
+
+int main(int argc, char *argv[]) {
+    if (!start(argc, argv)) return EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }
