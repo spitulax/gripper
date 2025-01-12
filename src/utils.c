@@ -188,17 +188,14 @@ bool verify_geometry(const char *geometry) {
 bool make_dir(const char *path) {
     struct stat s;
     if (stat(path, &s) != 0) {
-        // FIXME: use `mkdir(2)`
-        char *cmd = mp_string_newf(g_alloc, "mkdir -p '%s'", path).cstr;
-        int   ret = system(cmd);
-        if (ret == 0) {
-            printf("Created %s\n", path);
+        if (mkdir(path, 0777) == 0) {
+            printf("Created \"%s\"\n", path);
         } else {
-            eprintf("Failed to create directory %s\n", path);
+            eprintf("Failed to create directory \"%s\": %s\n", path, strerror(errno));
             return false;
         }
     } else if (!S_ISDIR(s.st_mode)) {
-        eprintf("%s already exists but it is not a directory\n", path);
+        eprintf("\"%s\" already exists but it is not a directory\n", path);
         return false;
     }
     return true;
