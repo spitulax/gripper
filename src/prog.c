@@ -56,8 +56,11 @@ void usage(void) {
     printf("    --copy              Save the captured image only to clipboard.\n");
     printf("    -d <dir>            Where the screenshot is saved (defaults to environment\n");
     printf("                        variable SCREENSHOT_DIR or ~/Pictures/Screenshots).\n");
-    printf("    -f <path>           Where the screenshot is saved to (overrides -d).\n");
+    printf("    -f <path>           Where the screenshot is saved to.\n");
+    printf("                        Overrides -d and --format.\n");
     printf("                        The extension must be a valid type as described below.\n");
+    printf("    --format <str>      The format of the output file name.\n");
+    printf("                        The format is described in `--help output-format`.\n");
     printf("    -t <type>           The image type. Defaults to png.\n");
     printf("                        Valid types: ");
     print_valid_imgtypes(stdout, true);
@@ -75,6 +78,22 @@ void usage(void) {
     printf("                        Used in mode region and active-window.\n");
     printf("    --no-save           Don't save the captured image anywhere.\n");
     printf("    --verbose           Print extra output.\n");
+}
+
+void usage_output_format(void) {
+    printf("Output filename format:\n");
+    printf("    %%Y: Full year (4 digits)\n");
+    printf("    %%y: Year since 2000 (2 digits)\n");
+    printf("    %%M: Month of the year (2 digits)\n");
+    printf("    %%d: Day of the month (2 digits)\n");
+    printf("    %%h: Hour in 24-hour format (2 digits)\n");
+    printf("    %%H: Hour in 12-hour format (2 digits)\n");
+    printf("    %%p: 'AM' or 'PM'\n");
+    printf("    %%m: Minute (2 digits)\n");
+    printf("    %%s: Second (2 digits)\n");
+    printf("    %%%%: Literal percent\n");
+    printf("\n");
+    printf("Example: 'Screenshot_%%y-%%M-%%d_%%h-%%m-%%s' => 'Screenshot_25-01-13_02-54-46.png'\n");
 }
 
 const char *next_arg(char ***it) {
@@ -131,7 +150,14 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
     }
 
     if (strcmp(mode, "--help") == 0 || strcmp(mode, "-h") == 0) {
-        usage();
+        const char *arg = next_arg(&it);
+        if (arg == NULL) {
+            usage();
+        } else if (streq(arg, "output-format")) {
+            usage_output_format();
+        } else {
+            usage();
+        }
         return TERMINATE;
     } else if (strcmp(mode, "--version") == 0 || strcmp(mode, "-v") == 0) {
         printf("%s %s\n", config->prog_name, config->prog_version);
@@ -261,6 +287,11 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
             } else {
                 config->wait_time = (uint32_t)wait_time;
             }
+        } else if (streq(arg, "--format")) {
+            if ((config->output_format = next_arg(&it)) == NULL) {
+                eprintf("--foramt: Unspecified format\n");
+                return FAILED;
+            }
         } else {
             eprintf("Unknown argument: %s\n", arg);
             return FAILED;
@@ -280,11 +311,12 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
 }
 
 void config_init(Config *config) {
-    config->compositor   = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
-    config->imgtype      = IMGTYPE_PNG;
-    config->png_level    = DEFAULT_PNG_LEVEL;
-    config->jpeg_quality = DEFAULT_JPEG_QUALITY;
-    config->save_mode    = SAVEMODE_DISK | SAVEMODE_CLIPBOARD;
-    config->scale        = 1.0;
-    config->wait_time    = 0;
+    config->compositor    = str2compositor(getenv("XDG_CURRENT_DESKTOP"));
+    config->output_format = "Screenshot_%Y%M%d_%h%m%s";
+    config->imgtype       = IMGTYPE_PNG;
+    config->png_level     = DEFAULT_PNG_LEVEL;
+    config->jpeg_quality  = DEFAULT_JPEG_QUALITY;
+    config->save_mode     = SAVEMODE_DISK | SAVEMODE_CLIPBOARD;
+    config->scale         = 1.0;
+    config->wait_time     = 0;
 }

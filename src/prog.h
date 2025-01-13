@@ -55,6 +55,7 @@ typedef struct {
     int         png_level;
     int         jpeg_quality;
     const char *output_path;
+    const char *output_format;
     bool        all_outputs;
 } Config;
 

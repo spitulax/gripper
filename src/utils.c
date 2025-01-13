@@ -69,27 +69,6 @@ void imgtype_remap(Config *config) {
     if (config->imgtype == IMGTYPE_JPG) config->imgtype = IMGTYPE_JPEG;
 }
 
-void set_output_path(Config *config) {
-    if (config->output_path != NULL) return;
-
-    time_t     now_time = time(NULL);
-    struct tm *now      = localtime(&now_time);
-
-    const char *ext = imgtype2str(config->imgtype);
-
-    config->output_path = mp_string_newf(g_alloc,
-                                         "%s/Screenshot_%04d%02d%02d_%02d%02d%02d.%s",
-                                         config->screenshot_dir,
-                                         now->tm_year + 1900,
-                                         now->tm_mon + 1,
-                                         now->tm_mday,
-                                         now->tm_hour,
-                                         now->tm_min,
-                                         now->tm_sec,
-                                         ext)
-                              .cstr;
-}
-
 const char *mode2str(Mode mode) {
     return mode_name[mode];
 }
@@ -254,4 +233,133 @@ bool containing_dir_exists(const char *path) {
     }
 
     return true;
+}
+
+// TODO: limited size
+#define BUF_SIZE DEFAULT_OUTPUT_SIZE
+
+void _write_buf(char *buf, size_t *written, const char *src, size_t bytes) {
+    memcpy(&buf[*written], src, bytes);
+    *written += bytes;
+}
+
+#define write_buf(buf, written, src, bytes)                                                        \
+    do {                                                                                           \
+        if (*(written) + (bytes) >= BUF_SIZE) {                                                    \
+            eprintf("Resulting output filename is too large\n");                                   \
+            return false;                                                                          \
+        }                                                                                          \
+        _write_buf((buf), (written), (src), (bytes));                                              \
+    } while (0)
+
+void _write_char(char *buf, size_t *written, char c) {
+    buf[*written] = c;
+    ++*written;
+}
+
+#define write_char(buf, written, c)                                                                \
+    do {                                                                                           \
+        if (*(written) + 1 >= BUF_SIZE) {                                                          \
+            eprintf("Resulting output filename is too large\n");                                   \
+            return false;                                                                          \
+        }                                                                                          \
+        _write_char((buf), (written), (c));                                                        \
+    } while (0)
+
+// The format is described in `usage_output_format()`
+bool parse_output_format(Config *config) {
+    // NOTE: This means the time is not the exact time of the screenshooting
+    // I have no problem with this
+    time_t     now_time = time(NULL);
+    struct tm *now      = localtime(&now_time);
+
+    const char *ext = imgtype2str(g_config->imgtype);
+
+    char  *buf     = mp_allocator_alloc(g_alloc, BUF_SIZE);
+    size_t written = 0;
+
+    write_buf(buf, &written, config->screenshot_dir, strlen(config->screenshot_dir));
+    write_char(buf, &written, '/');
+
+    const char *strptr = config->output_format;
+    const char *percent;
+    bool        next = true;
+    while (next) {
+        if ((percent = strchr(strptr, '%')) == NULL) next = false;
+
+        size_t bytes_until_percent =
+            (percent != NULL) ? (size_t)(percent - strptr) : strlen(strptr);
+        write_buf(buf, &written, strptr, bytes_until_percent);
+
+        // TODO: refactor?
+        if (percent != NULL) {
+            const char specifier = *(percent + 1);
+            switch (specifier) {
+                case 'Y' : {
+                    mp_String s = mp_string_newf(g_alloc, "%04d", now->tm_year + 1900);
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case 'y' : {
+                    // why do we even do this
+                    if (now->tm_year < 100) {
+                        eprintf("Using %%y but the current year is smaller than 2000\n");
+                        return false;
+                    }
+                    mp_String s = mp_string_newf(g_alloc, "%02d", now->tm_year - 100);
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case 'M' : {
+                    mp_String s = mp_string_newf(g_alloc, "%02d", now->tm_mon + 1);
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case 'd' : {
+                    mp_String s = mp_string_newf(g_alloc, "%02d", now->tm_mday);
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case 'h' : {
+                    mp_String s = mp_string_newf(g_alloc, "%02d", now->tm_hour);
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case 'H' : {
+                    int       hour_12 = now->tm_hour % 12;
+                    mp_String s       = mp_string_newf(g_alloc, "%02d", hour_12);
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case 'p' : {
+                    bool      is_am = (now->tm_hour / 12) == 0;
+                    mp_String s     = mp_string_newf(g_alloc, (is_am) ? "AM" : "PM");
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case 'm' : {
+                    mp_String s = mp_string_newf(g_alloc, "%02d", now->tm_min);
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case 's' : {
+                    mp_String s = mp_string_newf(g_alloc, "%02d", now->tm_sec);
+                    write_buf(buf, &written, s.cstr, s.size);
+                } break;
+                case '%' : {
+                    write_char(buf, &written, '%');
+                } break;
+                default : {
+                    eprintf("Invalid format: %%%c\n", specifier);
+                    eprintf("See available formats with `gripper --help output-format`\n");
+                    return false;
+                }
+            }
+
+            // percent + specifier + the next char
+            strptr = percent + 2;
+        }
+    }
+
+    write_char(buf, &written, '.');
+    write_buf(buf, &written, ext, strlen(ext));
+    buf[written] = '\0';
+
+    config->output_path = buf;
+
+    return true;
+
+#undef BUF_SIZE
 }

@@ -86,7 +86,7 @@ bool start(int argc, char *argv[]) {
     }
 
     if (config.save_mode & SAVEMODE_DISK) {
-        set_output_path(&config);
+        if (!parse_output_format(&config)) return_defer(false);
         assert(config.output_path != NULL);
     }
 

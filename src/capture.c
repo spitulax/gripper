@@ -178,7 +178,9 @@ bool capture(void) {
             printf("Region                  : %s\n", g_config->region);
         }
         printf("Screenshot directory    : %s\n", g_config->screenshot_dir);
-        printf("Output path             : %s\n", g_config->output_path);
+        if (g_config->save_mode & SAVEMODE_DISK) {
+            printf("Output path             : %s\n", g_config->output_path);
+        }
         printf("Last region cache       : %s\n", g_config->last_region_file);
         printf("Compositor              : %s\n", compositor2str(g_config->compositor));
         printf("Mode                    : %s\n", mode2str(g_config->mode));

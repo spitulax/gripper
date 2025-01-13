@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `--format`: Customise output file name.
+
 ### Fixed
 
 - Fix unable to pass name to `-d` and `-f` with spaces.

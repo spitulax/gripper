@@ -36,8 +36,6 @@ const char *imgtype2str(Imgtype imgtype);
 
 void imgtype_remap(Config *config);
 
-void set_output_path(Config *config);
-
 bool set_current_output_name(Config *config);
 
 const char *mode2str(Mode mode);
@@ -65,5 +63,7 @@ const char *file_ext(const char *path);
 void print_valid_imgtypes(FILE *stream, bool newline);
 
 bool containing_dir_exists(const char *path);
+
+bool parse_output_format(Config *config);
 
 #endif /* ifndef UTILS_H */
