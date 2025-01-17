@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.2] - 2025-01-18
+
+### Fixed
+
+- Failure with `--copy` and `--no-save`.
+- `--no-save` now overrides `--save` and `--copy`.
+
 ## [1.2.1] - 2025-01-18
 
 ### Fixed
@@ -58,7 +65,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release.
 
-[Unreleased]: https://github.com/spitulax/gripper/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/spitulax/gripper/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/spitulax/gripper/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/spitulax/gripper/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/spitulax/gripper/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/spitulax/gripper/compare/v1.0.2...v1.1.0
