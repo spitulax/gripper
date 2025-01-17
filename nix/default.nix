@@ -9,8 +9,8 @@
 , ninja
 , pkg-config
 , jq
-, version ? "git"
 
+, version ? "git"
 , debug ? false
 }:
 stdenv.mkDerivation rec {
