@@ -85,10 +85,10 @@ bool start(int argc, char *argv[]) {
         if (!set_current_output_name(&config)) return_defer(false);
     }
 
-    if (config.save_mode & SAVEMODE_DISK) {
+    if (config.output_path == NULL && config.save_mode & SAVEMODE_DISK) {
         if (!parse_output_format(&config)) return_defer(false);
-        assert(config.output_path != NULL);
     }
+    assert(config.output_path != NULL);
 
     if (!capture()) return_defer(false);
 

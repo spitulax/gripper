@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- `-f` flag not having any effect.
+
 ## [1.2.0] - 2025-01-14
 
 ### Added
