@@ -9,12 +9,10 @@
 , ninja
 , pkg-config
 , jq
+, version ? "git"
 
 , debug ? false
 }:
-let
-  version = lib.trim (lib.readFile ../VERSION);
-in
 stdenv.mkDerivation rec {
   pname = "gripper";
   inherit version;
