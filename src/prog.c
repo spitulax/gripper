@@ -2,6 +2,7 @@
 #include "compositors.h"
 #include "utils.h"
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -77,6 +78,7 @@ void usage(void) {
     printf("                        should be used by last-region.\n");
     printf("                        Used in mode region and active-window.\n");
     printf("    --no-save           Don't save the captured image anywhere.\n");
+    printf("                        Overrides --save and --copy.\n");
     printf("    --verbose           Print extra output.\n");
 }
 
@@ -129,7 +131,14 @@ bool parse_mode_args(char ***it, Config *config) {
     return true;
 }
 
-void post_parse_args(Config *config) {
+typedef enum {
+    POST_ARG_NONE    = 0,
+    POST_ARG_NO_SAVE = 1 << 0,    // Overrides `save_mode`
+} PostArg;
+
+void post_parse_args(Config *config, uint32_t post_args) {
+    if (post_args & POST_ARG_NO_SAVE) config->save_mode = SAVEMODE_NONE;
+
     imgtype_remap(config);
 }
 
@@ -169,7 +178,9 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
     }
     if (!parse_mode_args(&it, config)) return FAILED;
 
-    bool        specified_save_mode = false;
+    uint32_t post_args           = POST_ARG_NONE;
+    bool     specified_save_mode = false;
+
     const char *arg;
     while ((arg = next_arg(&it)) != NULL) {
         if (streq(arg, "--verbose")) {
@@ -207,7 +218,7 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
                 config->save_mode |= SAVEMODE_CLIPBOARD;
             }
         } else if (streq(arg, "--no-save")) {
-            config->save_mode = SAVEMODE_NONE;
+            post_args |= POST_ARG_NO_SAVE;
         } else if (streq(arg, "-t")) {
             const char *type = next_arg(&it);
             if (type == NULL) {
@@ -302,7 +313,7 @@ ParseArgsResult parse_args(int argc, char *argv[], Config *config) {
     if (config->mode == MODE_TEST) return FAILED;
 #endif
 
-    post_parse_args(config);
+    post_parse_args(config, post_args);
     return OK;
 
 #undef FAILED
